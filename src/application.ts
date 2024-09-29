@@ -1,28 +1,36 @@
 
-import {GPUContext} from './gpuContext'
+import { GPUContext } from './gpuContext'
 import { SimpleTriangle } from "./demos/simpleTriangle";
 import { SimpleCompute } from './demos/simpleCompute';
-import {ColorVertexTriangle} from './demos/colorVertexTriangle'
+import { ColorVertexTriangle } from './demos/colorVertexTriangle'
 import { Checkerboard } from './demos/checkerboard';
+import { UniformTriangle } from './demos/uniformTriangle';
+import { MultUniformTriangle } from './demos/multUniformTriangle';
 
 export class Application {
-    static async initalize(){
-       // 初始化GPU 上下文
-       await GPUContext.initialize();
+    static async initalize() {
+        // 初始化GPU 上下文
+        await GPUContext.initialize();
 
-       // 简单三角形初始化
-       SimpleTriangle.initalize(GPUContext.device);
+        // 简单三角形初始化
+        SimpleTriangle.initalize(GPUContext.device);
 
-       // 简单的计算管线
-       SimpleCompute.initalize(GPUContext.device);
+        // 简单的计算管线
+        SimpleCompute.initalize(GPUContext.device);
 
-       // 顶点着色
-       ColorVertexTriangle.initalize(GPUContext.device);
+        // 顶点着色
+        ColorVertexTriangle.initalize(GPUContext.device);
 
-       // 棋盘渲染
-       Checkerboard.initalize(GPUContext.device);
+        // 棋盘渲染
+        Checkerboard.initalize(GPUContext.device);
+
+        // Uniform 测试
+        UniformTriangle.initalize(GPUContext.device);
+
+        // Uniform 多个三角形 多个bindGroup
+        MultUniformTriangle.initalize(GPUContext.device)
     }
-    static update(){
+    static update() {
         // 简单三角形
         SimpleTriangle.update();
 
@@ -30,15 +38,20 @@ export class Application {
         ColorVertexTriangle.update();
 
 
-        //棋盘渲染
+        // 棋盘渲染
         Checkerboard.update();
 
-      
+        // Uniform 测试
+        UniformTriangle.update();
+
+        MultUniformTriangle.update();
+
+
 
     }
 
-    static draw(){
-          // 简单三角形
+    static draw() {
+        // 简单三角形
         SimpleTriangle.draw();
 
         // 顶点着色
@@ -47,11 +60,18 @@ export class Application {
         // 棋盘渲染
         Checkerboard.draw();
 
+        // Uniform 测试
+        UniformTriangle.draw();
+
+        MultUniformTriangle.draw();
+
     }
-    static destory(){
+    static destory() {
         SimpleTriangle.destory();
         SimpleCompute.destory();
         ColorVertexTriangle.destory();
         Checkerboard.destory();
+        UniformTriangle.destory();
+        MultUniformTriangle.destory();
     }
 }

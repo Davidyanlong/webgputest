@@ -4,12 +4,21 @@ import { Base } from "./base"
  * 渲染基本流程
  * 简单的三角形
  */
-export class TextureF extends Base{
-    private static bindGroup:GPUBindGroup
+export class TextureFSampler extends Base{
+    private static bindGroups:GPUBindGroup[] = []
+    private static settings:Record<string,string>
     static async initalize(device: GPUDevice) {
 
         await super.initialize(device)
-        super.initCanvas('textureF')
+        super.initCanvas('textureFSampler')
+
+        this.settings = {
+            addressModeU: 'repeat',
+            addressModeV: 'repeat',
+            magFilter: 'linear',
+          };
+
+        this.initGUI();
 
         //#endregion
 
@@ -126,15 +135,22 @@ export class TextureF extends Base{
             { width: kTextureWidth, height: kTextureHeight },
         );
       
-        const sampler = this.device.createSampler();
-
-        this.bindGroup = this.device.createBindGroup({
-            layout: this.pipeline.getBindGroupLayout(0),
-            entries: [
-              { binding: 0, resource: sampler },
-              { binding: 1, resource: texture.createView() },
-            ],
-          });
+        for (let i = 0; i < 8; ++i) {
+            const sampler = this.device.createSampler({
+              addressModeU: (i & 1) ? 'repeat' : 'clamp-to-edge',
+              addressModeV: (i & 2) ? 'repeat' : 'clamp-to-edge',
+              magFilter: (i & 4) ? 'linear' : 'nearest',
+            });
+        
+            const bindGroup = this.device.createBindGroup({
+              layout: this.pipeline.getBindGroupLayout(0),
+              entries: [
+                { binding: 0, resource: sampler },
+                { binding: 1, resource: texture.createView() },
+              ],
+            });
+            this.bindGroups.push(bindGroup);
+          }
 
     }
     static update() {
@@ -159,15 +175,36 @@ export class TextureF extends Base{
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
-        pass.setBindGroup(0, this.bindGroup);
+
+        const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
+                (this.settings.addressModeV === 'repeat' ? 2 : 0) +
+                (this.settings.magFilter === 'linear' ? 4 : 0);
+
+        const bindGroup = this.bindGroups[ndx];
+
+
+        pass.setBindGroup(0, bindGroup);
         pass.draw(6);  // call our vertex shader 3 times
         pass.end();
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    static destory() {
+    static initGUI(){
+       
 
+        const addressOptions = ['repeat', 'clamp-to-edge'];
+        const filterOptions = ['nearest', 'linear'];
+        // @ts-ignore
+        const gui = new GUI({
+            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
+            width:'145px'
+        })
+        gui.domElement.style.top = '-300px';
+
+        gui.add(this.settings, 'addressModeU', addressOptions);
+        gui.add(this.settings, 'addressModeV', addressOptions);
+        gui.add(this.settings, 'magFilter', filterOptions);
     }
 }
 

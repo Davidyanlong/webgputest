@@ -7,6 +7,7 @@ import { Checkerboard } from './demos/checkerboard';
 import { UniformTriangle } from './demos/uniformTriangle';
 import { MultUniformTriangle } from './demos/multUniformTriangle';
 import { StorageBufferTriangles } from './demos/storageBufferTriangles';
+import { VertexBufferTriangles } from './demos/vertexBufferTriangles';
 
 export class Application {
     static async initalize() {
@@ -31,8 +32,11 @@ export class Application {
         // Uniform 多个三角形 多个bindGroup
         MultUniformTriangle.initalize(GPUContext.device);
 
-        // storage
+        // storage buffer
         StorageBufferTriangles.initalize(GPUContext.device);
+
+        // Vertex buffer
+        VertexBufferTriangles.initalize(GPUContext.device)
     }
     static update() {
         // 简单三角形
@@ -52,7 +56,7 @@ export class Application {
 
         StorageBufferTriangles.update();
 
-
+        VertexBufferTriangles.update();
 
     }
 
@@ -73,6 +77,8 @@ export class Application {
 
         StorageBufferTriangles.draw();
 
+        VertexBufferTriangles.draw();
+
     }
     static destory() {
         SimpleTriangle.destory();
@@ -82,5 +88,7 @@ export class Application {
         UniformTriangle.destory();
         MultUniformTriangle.destory();
         StorageBufferTriangles.destory();
+        VertexBufferTriangles.destory();
+
     }
 }

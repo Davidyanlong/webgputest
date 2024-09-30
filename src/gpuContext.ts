@@ -2,7 +2,14 @@ export class GPUContext {
   static device: GPUDevice;
   static async initialize() {
     const adapter = await navigator.gpu!.requestAdapter();
-    GPUContext.device = await adapter!.requestDevice();
+    GPUContext.device = await adapter!.requestDevice({
+      requiredLimits:{
+        minUniformBufferOffsetAlignment: 256,
+        maxBufferSize: adapter!.limits.maxBufferSize,
+        maxStorageBufferBindingSize:
+          adapter!.limits.maxStorageBufferBindingSize,
+      }
+    });
     if (! GPUContext.device) {
       fail("need a browser that supports WebGPU");
       return;

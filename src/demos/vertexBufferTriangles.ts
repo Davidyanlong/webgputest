@@ -55,8 +55,9 @@ export class VertexBufferTriangles {
                 struct Vertex {
                     @location(0) position: vec2f,
                     @location(1) color: vec4f,
-                    @location(2)offset: vec2f,
+                    @location(2) offset: vec2f,
                     @location(3) scale: vec2f,
+                    @location(4) perVertexColor: vec3f,
                 };
                 
                 @vertex fn vs(
@@ -64,7 +65,7 @@ export class VertexBufferTriangles {
                 ) -> VSOutput {
                     var vsOut: VSOutput;
                     vsOut.position = vec4f(vert.position * vert.scale + vert.offset, 0.0, 1.0);
-                    vsOut.color = vert.color;
+                    vsOut.color = vert.color * vec4f(vert.perVertexColor, 1);;
                    return vsOut;
                 }
             
@@ -84,12 +85,17 @@ export class VertexBufferTriangles {
                 module,
                 buffers:[
                     {
-                        arrayStride: 2 * 4, // 2 floats, 4 bytes each
+                        arrayStride: 2 * 4 + 3 * 4 , // 2 floats, 4 bytes each
                         attributes:[
                             {   // position
                                 shaderLocation:0,
                                 offset:0,
                                 format:'float32x2'
+                            },
+                            {   // color
+                                shaderLocation:4,
+                                offset: 2 * 4,
+                                format:'float32x3'
                             }
                         ]
                     },
@@ -264,13 +270,19 @@ export class VertexBufferTriangles {
     } = {}) {
         // 2 triangles per subdivision, 3 verts per tri, 2 values (xy) each.
         const numVertices = numSubdivisions * 3 * 2;
-        const vertexData = new Float32Array(numSubdivisions * 2 * 3 * 2);
+        const vertexData = new Float32Array(numVertices * (2+ 3));
 
         let offset = 0;
-        const addVertex = (x: number, y: number) => {
+        const addVertex = (x: number, y: number, r:number, g:number, b:number) => {
             vertexData[offset++] = x;
             vertexData[offset++] = y;
+            vertexData[offset++] = r;
+            vertexData[offset++] = g;
+            vertexData[offset++] = b;
         };
+
+        const innerColor:[number, number, number] = [1, 1, 1];
+        const outerColor:[number, number, number] = [0.1, 0.1, 0.1];
 
         // 2 triangles per subdivision
         //
@@ -288,14 +300,14 @@ export class VertexBufferTriangles {
             const s2 = Math.sin(angle2);
 
             // first triangle
-            addVertex(c1 * radius, s1 * radius);
-            addVertex(c2 * radius, s2 * radius);
-            addVertex(c1 * innerRadius, s1 * innerRadius);
+            addVertex(c1 * radius, s1 * radius, ...outerColor);
+            addVertex(c2 * radius, s2 * radius, ...outerColor);
+            addVertex(c1 * innerRadius, s1 * innerRadius, ...innerColor);
 
             // second triangle
-            addVertex(c1 * innerRadius, s1 * innerRadius);
-            addVertex(c2 * radius, s2 * radius);
-            addVertex(c2 * innerRadius, s2 * innerRadius);
+            addVertex(c1 * innerRadius, s1 * innerRadius, ...innerColor);
+            addVertex(c2 * radius, s2 * radius, ...outerColor);
+            addVertex(c2 * innerRadius, s2 * innerRadius, ...innerColor);
         }
 
         return {

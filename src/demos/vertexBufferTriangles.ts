@@ -1,8 +1,8 @@
 /**
  * 渲染基本流程
  * bindGroup / uniform 学习
- *  uniform max 64k
- *  storage max 128M
+ *  顶点的结构信息是设置在renderpipeline
+ *  渲染需要单独绑定顶点插槽
  */
 export class VertexBufferTriangles {
     private static pipeline: GPURenderPipeline
@@ -16,12 +16,12 @@ export class VertexBufferTriangles {
     private static aspect = 1;
 
     private static kNumObjects = 100;
-    private static objectInfos: ObjectInfo[] = [];
-    private static storageValues: Float32Array;
-    private static bindGroup: GPUBindGroup;
-    private static storageBuffer: GPUBuffer;
+    private static changingVertexBuffer : GPUBuffer;
+    private static staticVertexBuffer:GPUBuffer;
     private static vertexBuffer:GPUBuffer;
+    private static vertexValues:Float32Array;
     private static numVertices:number;
+    private static objectInfos:{scale:number}[] = [];
     private static isInited = false
 
 
@@ -54,31 +54,17 @@ export class VertexBufferTriangles {
 
                 struct Vertex {
                     @location(0) position: vec2f,
+                    @location(1) color: vec4f,
+                    @location(2)offset: vec2f,
+                    @location(3) scale: vec2f,
                 };
-
-                struct OurStruct {
-                    color: vec4f,
-                    offset: vec2f,
-                };
-
-                struct OtherStruct {
-                    scale: vec2f,
-                };
- 
-
-                @group(0) @binding(0) var<storage, read> ourStructs: array<OurStruct>;
-                @group(0) @binding(1) var<storage, read> otherStructs: array<OtherStruct>;
                 
                 @vertex fn vs(
                    vert: Vertex,
-                    @builtin(instance_index) instanceIndex: u32
                 ) -> VSOutput {
-                    let otherStruct = otherStructs[instanceIndex];
-                    let ourStruct = ourStructs[instanceIndex];
-            
                     var vsOut: VSOutput;
-                    vsOut.position = vec4f(vert.position * otherStruct.scale + ourStruct.offset, 0.0, 1.0);
-                    vsOut.color = ourStruct.color;
+                    vsOut.position = vec4f(vert.position * vert.scale + vert.offset, 0.0, 1.0);
+                    vsOut.color = vert.color;
                    return vsOut;
                 }
             
@@ -106,6 +92,34 @@ export class VertexBufferTriangles {
                                 format:'float32x2'
                             }
                         ]
+                    },
+                    {
+                        arrayStride: 6 * 4, // 6 floats, 4 bytes each
+                        stepMode:'instance',
+                        attributes:[
+                            {   // color
+                                shaderLocation:1,
+                                offset:0,
+                                format:'float32x4'
+                            },
+                            {   // offset
+                                shaderLocation:2,
+                                offset: 4 * 4,   // color 4 floats,
+                                format:'float32x2'
+                            }
+
+                        ]
+                    },
+                    {
+                        arrayStride: 2 * 4, // 2 floats, 4 bytes each
+                        stepMode:'instance',
+                        attributes:[
+                            {   // scale
+                                shaderLocation:3,
+                                offset:0,
+                                format:'float32x2'
+                            }
+                        ]
                     }
                 ]
             },
@@ -121,47 +135,47 @@ export class VertexBufferTriangles {
 
 
         // create 2 buffers for the uniform values
-        const staticStorageUnitSize =
+        const staticUnitSize  =
             4 * 4 + // color is 4 32bit floats (4bytes each)
-            2 * 4 + // offset is 2 32bit floats (4bytes each)
-            2 * 4;  // padding
+            2 * 4 // offset is 2 32bit floats (4bytes each)
 
         const changingUnitSize = VertexBufferTriangles.changingUnitSize =
             2 * 4;  // scale is 2 32bit floats (4bytes each)
 
-        const staticStorageBufferSize = staticStorageUnitSize * VertexBufferTriangles.kNumObjects;
-        const storageBufferSize = changingUnitSize * VertexBufferTriangles.kNumObjects;
+        const staticVertexBufferSize  = staticUnitSize  * VertexBufferTriangles.kNumObjects;
+        const changingVertexBufferSize  = changingUnitSize * VertexBufferTriangles.kNumObjects;
 
-        const staticStorageBuffer = device.createBuffer({
-            label: 'static storage for objects',
-            size: staticStorageBufferSize,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        VertexBufferTriangles.staticVertexBuffer  = device.createBuffer({
+            label: 'static vertex for objects',
+            size: staticVertexBufferSize ,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         });
 
-        VertexBufferTriangles.storageBuffer = device.createBuffer({
-            label: 'changing storage for objects',
-            size: storageBufferSize,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        VertexBufferTriangles.changingVertexBuffer  = device.createBuffer({
+            label: 'changing vertex for objects',
+            size: changingVertexBufferSize,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         });
 
-        const staticStorageValues = new Float32Array(staticStorageBufferSize / 4);
-        VertexBufferTriangles.storageValues = new Float32Array(storageBufferSize / 4);
-
-
-        for (let i = 0; i < VertexBufferTriangles.kNumObjects; ++i) {
-            const staticOffset = i * (staticStorageUnitSize / 4);
-
-            // These are only set once so set them now
-            staticStorageValues.set([rand(), rand(), rand(), 1], staticOffset + VertexBufferTriangles.kColorOffset);        // set the color
-            staticStorageValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], staticOffset + VertexBufferTriangles.kOffsetOffset);      // set the offset
-
-            VertexBufferTriangles.objectInfos.push({
+   
+        {
+            const staticVertexValues = new Float32Array(staticVertexBufferSize / 4);
+            for (let i = 0; i < VertexBufferTriangles.kNumObjects; ++i) {
+              const staticOffset = i * (staticUnitSize / 4);
+        
+              // These are only set once so set them now
+              staticVertexValues.set([rand(), rand(), rand(), 1], staticOffset + VertexBufferTriangles.kColorOffset);        // set the color
+              staticVertexValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], staticOffset + VertexBufferTriangles.kOffsetOffset);      // set the offset
+        
+              VertexBufferTriangles.objectInfos.push({
                 scale: rand(0.2, 0.5),
-            });
-        }
-        device.queue.writeBuffer(staticStorageBuffer, 0, staticStorageValues);
+              });
+            }
+            device.queue.writeBuffer(VertexBufferTriangles.staticVertexBuffer, 0, staticVertexValues);
+          }
 
-
+        // a typed array we can use to update the changingStorageBuffer
+        VertexBufferTriangles.vertexValues = new Float32Array(changingVertexBufferSize / 4);
         // setup a storage buffer with vertex data
         const { vertexData, numVertices } = VertexBufferTriangles.createCircleVertices({
             radius: 0.5,
@@ -175,26 +189,6 @@ export class VertexBufferTriangles {
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         });
         device.queue.writeBuffer(vertexBuffer, 0, vertexData);
-
-
-        VertexBufferTriangles.bindGroup = device.createBindGroup({
-            label: 'bind group for objects',
-            layout: VertexBufferTriangles.pipeline.getBindGroupLayout(0),
-            entries: [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: staticStorageBuffer
-                    }
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: VertexBufferTriangles.storageBuffer
-                    }
-                },
-            ],
-        });
 
 
         //#region  渲染队列参数
@@ -236,17 +230,21 @@ export class VertexBufferTriangles {
         const pass = encoder.beginRenderPass(VertexBufferTriangles.renderPassDescriptor);
         pass.setPipeline(VertexBufferTriangles.pipeline);
         pass.setVertexBuffer(0,VertexBufferTriangles.vertexBuffer);
+        pass.setVertexBuffer(1, VertexBufferTriangles.staticVertexBuffer);
+        pass.setVertexBuffer(2, VertexBufferTriangles.changingVertexBuffer);
+
         // 渲染多个对象
         let ndx = 0;
         for (const { scale } of VertexBufferTriangles.objectInfos) {
             const offset = ndx * (VertexBufferTriangles.changingUnitSize / 4);
-            VertexBufferTriangles.storageValues.set([scale / VertexBufferTriangles.aspect, scale], offset + VertexBufferTriangles.kScaleOffset); // set the scale
-
+            VertexBufferTriangles.vertexValues.set([scale / VertexBufferTriangles.aspect, scale], offset + VertexBufferTriangles.kScaleOffset); // set the scale
             ndx++;
         }
+
         // upload all scales at once
-        VertexBufferTriangles.device.queue.writeBuffer(VertexBufferTriangles.storageBuffer, 0, VertexBufferTriangles.storageValues);
-        pass.setBindGroup(0, VertexBufferTriangles.bindGroup);
+        VertexBufferTriangles.device.queue.writeBuffer(VertexBufferTriangles.changingVertexBuffer, 0, VertexBufferTriangles.vertexValues);
+
+
         pass.draw(VertexBufferTriangles.numVertices, VertexBufferTriangles.kNumObjects);  // call our vertex shader 3 times
         pass.end();
 
@@ -320,6 +318,3 @@ function rand(min?: number, max?: number) {
     return min + Math.random() * (max - min);
 };
 
-interface ObjectInfo {
-    scale: number
-}

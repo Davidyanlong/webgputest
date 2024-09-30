@@ -11,7 +11,7 @@ export class VertexBufferTriangles {
     private static device: GPUDevice
     private static kColorOffset = 0;
     private static kScaleOffset = 0;
-    private static kOffsetOffset = 4;
+    private static kOffsetOffset = 1;
     private static changingUnitSize: number;
     private static aspect = 1;
 
@@ -79,38 +79,38 @@ export class VertexBufferTriangles {
 
         //#region  render pipeline
         VertexBufferTriangles.pipeline = device.createRenderPipeline({
-            label: 'split storage buffer pipeline',
+            label: 'per vertex color',
             layout: 'auto',
             vertex: {
                 module,
                 buffers:[
                     {
-                        arrayStride: 2 * 4 + 3 * 4 , // 2 floats, 4 bytes each
+                        arrayStride: 2 * 4 +  4 , // 2 floats, 4 bytes each
                         attributes:[
                             {   // position
                                 shaderLocation:0,
                                 offset:0,
                                 format:'float32x2'
                             },
-                            {   // color
+                            {   // perVertexColor
                                 shaderLocation:4,
                                 offset: 2 * 4,
-                                format:'float32x3'
+                                format:'unorm8x4'
                             }
                         ]
                     },
                     {
-                        arrayStride: 6 * 4, // 6 floats, 4 bytes each
+                        arrayStride:  4 + 2 * 4, // 6 floats, 4 bytes each
                         stepMode:'instance',
                         attributes:[
                             {   // color
                                 shaderLocation:1,
                                 offset:0,
-                                format:'float32x4'
+                                format:'unorm8x4'
                             },
                             {   // offset
                                 shaderLocation:2,
-                                offset: 4 * 4,   // color 4 floats,
+                                offset: 4,   // color 4 floats,
                                 format:'float32x2'
                             }
 
@@ -142,7 +142,7 @@ export class VertexBufferTriangles {
 
         // create 2 buffers for the uniform values
         const staticUnitSize  =
-            4 * 4 + // color is 4 32bit floats (4bytes each)
+            4 + // color is 4 32bit floats (4bytes each)
             2 * 4 // offset is 2 32bit floats (4bytes each)
 
         const changingUnitSize = VertexBufferTriangles.changingUnitSize =
@@ -165,19 +165,25 @@ export class VertexBufferTriangles {
 
    
         {
-            const staticVertexValues = new Float32Array(staticVertexBufferSize / 4);
+            const staticVertexValuesU8 = new Uint8Array(staticVertexBufferSize);
+            const staticVertexValuesF32 = new Float32Array(staticVertexValuesU8.buffer);
             for (let i = 0; i < VertexBufferTriangles.kNumObjects; ++i) {
-              const staticOffset = i * (staticUnitSize / 4);
+                const staticOffsetU8 = i * staticUnitSize;
+                const staticOffsetF32 = staticOffsetU8 / 4;
         
               // These are only set once so set them now
-              staticVertexValues.set([rand(), rand(), rand(), 1], staticOffset + VertexBufferTriangles.kColorOffset);        // set the color
-              staticVertexValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], staticOffset + VertexBufferTriangles.kOffsetOffset);      // set the offset
-        
+              staticVertexValuesU8.set(        // set the color
+                [rand() * 255, rand() * 255, rand() * 255, 255],
+                staticOffsetU8 + VertexBufferTriangles.kColorOffset);
+       
+            staticVertexValuesF32.set(      // set the offset
+                [rand(-0.9, 0.9), rand(-0.9, 0.9)],
+                staticOffsetF32 + VertexBufferTriangles.kOffsetOffset);
               VertexBufferTriangles.objectInfos.push({
                 scale: rand(0.2, 0.5),
               });
             }
-            device.queue.writeBuffer(VertexBufferTriangles.staticVertexBuffer, 0, staticVertexValues);
+            device.queue.writeBuffer(VertexBufferTriangles.staticVertexBuffer, 0, staticVertexValuesF32);
           }
 
         // a typed array we can use to update the changingStorageBuffer
@@ -270,15 +276,21 @@ export class VertexBufferTriangles {
     } = {}) {
         // 2 triangles per subdivision, 3 verts per tri, 2 values (xy) each.
         const numVertices = numSubdivisions * 3 * 2;
-        const vertexData = new Float32Array(numVertices * (2+ 3));
+          // 2 32-bit values for position (xy) and 1 32-bit value for color (rgb_)
+        // The 32-bit color value will be written/read as 4 8-bit values
+        const vertexData = new Float32Array(numVertices * (2 + 1));
+        const colorData = new Uint8Array(vertexData.buffer);
 
         let offset = 0;
+        let colorOffset = 8;
         const addVertex = (x: number, y: number, r:number, g:number, b:number) => {
             vertexData[offset++] = x;
             vertexData[offset++] = y;
-            vertexData[offset++] = r;
-            vertexData[offset++] = g;
-            vertexData[offset++] = b;
+            offset += 1;  // skip the color
+            colorData[colorOffset++] = r * 255;
+            colorData[colorOffset++] = g * 255;
+            colorData[colorOffset++] = b * 255;
+            colorOffset += 9;  // skip extra byte and the position
         };
 
         const innerColor:[number, number, number] = [1, 1, 1];

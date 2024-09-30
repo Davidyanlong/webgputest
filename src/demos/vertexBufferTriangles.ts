@@ -1,19 +1,16 @@
+import { Base } from "./base";
+
 /**
  * 渲染基本流程
  * bindGroup / uniform 学习
  *  顶点的结构信息是设置在renderpipeline
  *  渲染需要单独绑定顶点插槽
  */
-export class VertexBufferTriangles {
-    private static pipeline: GPURenderPipeline
-    private static renderPassDescriptor: GPURenderPassDescriptor
-    private static context: GPUCanvasContext
-    private static device: GPUDevice
+export class VertexBufferTriangles extends Base{
     private static kColorOffset = 0;
     private static kScaleOffset = 0;
     private static kOffsetOffset = 1;
     private static changingUnitSize: number;
-    private static aspect = 1;
 
     private static kNumObjects = 100;
     private static changingVertexBuffer : GPUBuffer;
@@ -23,26 +20,12 @@ export class VertexBufferTriangles {
     private static vertexValues:Float32Array;
     private static numVertices:number;
     private static objectInfos:{scale:number}[] = [];
-    private static isInited = false
 
 
     static async initalize(device: GPUDevice) {
 
-        VertexBufferTriangles.device = device;
-
-        //#region initilize
-        const canvas = document.querySelector('#vertexBufferTriangles') as HTMLCanvasElement;
-        const context = VertexBufferTriangles.context = canvas!.getContext('webgpu')!;
-        // "bgra8unorm"
-        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-        context?.configure({
-            device,
-            format: presentationFormat,
-        });
-
-        VertexBufferTriangles.aspect = canvas.width / canvas.height;
-        //#endregion
-
+        await super.initialize(device);
+        super.initCanvas('vertexBufferTriangles')
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -133,7 +116,7 @@ export class VertexBufferTriangles {
             fragment: {
                 module,
                 targets: [
-                    { format: presentationFormat },
+                    { format: this.presentationFormat },
                 ],
             },
         });
@@ -216,7 +199,7 @@ export class VertexBufferTriangles {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
-                    view: context!.getCurrentTexture().createView(),
+                    view: this.context!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -248,7 +231,7 @@ export class VertexBufferTriangles {
 
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(VertexBufferTriangles.renderPassDescriptor);
-        pass.setPipeline(VertexBufferTriangles.pipeline);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0,VertexBufferTriangles.vertexBuffer);
         pass.setVertexBuffer(1, VertexBufferTriangles.staticVertexBuffer);
         pass.setVertexBuffer(2, VertexBufferTriangles.changingVertexBuffer);

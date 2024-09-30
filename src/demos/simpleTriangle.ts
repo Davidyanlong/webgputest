@@ -1,38 +1,17 @@
+import { Base } from "./base"
+
 /**
  * 渲染基本流程
  * 简单的三角形
  */
-export class SimpleTriangle {
-    private static pipeline: GPURenderPipeline
-    private static renderPassDescriptor: GPURenderPassDescriptor
-    private static context: GPUCanvasContext
+export class SimpleTriangle extends Base{
     private static context2: GPUCanvasContext
-    private static device:GPUDevice
-    private static isInited = false
 
     static async initalize(device: GPUDevice) {
 
-        SimpleTriangle.device = device;
-
-        //#region initilize
-        const canvas = document.querySelector('#canvas1') as HTMLCanvasElement;
-        const context = SimpleTriangle.context= canvas!.getContext('webgpu')!;
-        // "bgra8unorm"
-        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-        context?.configure({
-            device,
-            format: presentationFormat,
-        });
-
-        const canvas2 = document.querySelector('#canvas2') as HTMLCanvasElement;
-        const context2 = SimpleTriangle.context2 = canvas2!.getContext('webgpu')!;
-        // "bgra8unorm"
-        context2?.configure({
-            device,
-            format: presentationFormat,
-        });
-
-
+        await super.initialize(device)
+        super.initCanvas('simpleTriangle1')
+        this.context2 = super.initCanvas('simpleTriangle2',true)
 
         //#endregion
 
@@ -79,8 +58,8 @@ export class SimpleTriangle {
                 entryPoint: 'fs',
                 module,
                 targets: [
-                    { format: presentationFormat },
-                    { format: presentationFormat }
+                    { format: this.presentationFormat },
+                    { format: this.presentationFormat }
                 ],
             },
         });
@@ -92,13 +71,13 @@ export class SimpleTriangle {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
-                    view: context!.getCurrentTexture().createView(),
+                    view: this.context!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
                 },
                 {
-                    view: context2!.getCurrentTexture().createView(),
+                    view: this.context2!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -135,7 +114,7 @@ export class SimpleTriangle {
 
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(SimpleTriangle.renderPassDescriptor);
-        pass.setPipeline(SimpleTriangle.pipeline);
+        pass.setPipeline(SimpleTriangle.pipeline as GPURenderPipeline);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();
 

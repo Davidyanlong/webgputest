@@ -1,19 +1,16 @@
+import { Base } from "./base";
+
 /**
  * 渲染基本流程
  * bindGroup / uniform 学习
  *  uniform max 64k
  *  storage max 128M
  */
-export class StorageBufferTriangles {
-    private static pipeline: GPURenderPipeline
-    private static renderPassDescriptor: GPURenderPassDescriptor
-    private static context: GPUCanvasContext
-    private static device: GPUDevice
+export class StorageBufferTriangles extends Base{
     private static kColorOffset = 0;
     private static kScaleOffset = 0;
     private static kOffsetOffset = 4;
     private static changingUnitSize: number;
-    private static aspect = 1;
 
     private static kNumObjects = 100;
     private static objectInfos: ObjectInfo[] = [];
@@ -21,26 +18,11 @@ export class StorageBufferTriangles {
     private static bindGroup: GPUBindGroup;
     private static storageBuffer: GPUBuffer;
     private static numVertices:number;
-    private static isInited = false
 
 
     static async initalize(device: GPUDevice) {
-
-        StorageBufferTriangles.device = device;
-
-        //#region initilize
-        const canvas = document.querySelector('#storageBufferTriangles') as HTMLCanvasElement;
-        const context = StorageBufferTriangles.context = canvas!.getContext('webgpu')!;
-        // "bgra8unorm"
-        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-        context?.configure({
-            device,
-            format: presentationFormat,
-        });
-
-        StorageBufferTriangles.aspect = canvas.width / canvas.height;
-        //#endregion
-
+        await super.initialize(device)
+        this.initCanvas('storageBufferTriangles')
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -101,7 +83,7 @@ export class StorageBufferTriangles {
             fragment: {
                 module,
                 targets: [
-                    { format: presentationFormat },
+                    { format: this.presentationFormat },
                 ],
             },
         });
@@ -197,7 +179,7 @@ export class StorageBufferTriangles {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
-                    view: context!.getCurrentTexture().createView(),
+                    view: this.context!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -229,7 +211,7 @@ export class StorageBufferTriangles {
 
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(StorageBufferTriangles.renderPassDescriptor);
-        pass.setPipeline(StorageBufferTriangles.pipeline);
+        pass.setPipeline(StorageBufferTriangles.pipeline as GPURenderPipeline);
         // 渲染多个对象
         let ndx = 0;
         for (const { scale } of StorageBufferTriangles.objectInfos) {

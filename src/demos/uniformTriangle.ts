@@ -1,40 +1,25 @@
+import { Base } from "./base"
+
 /**
  * 渲染基本流程
  * bindGroup / uniform 学习
  */
-export class UniformTriangle {
-    private static pipeline: GPURenderPipeline
-    private static renderPassDescriptor: GPURenderPassDescriptor
-    private static context: GPUCanvasContext
-    private static device: GPUDevice
+export class UniformTriangle extends Base {
     private static bindGroup: GPUBindGroup
     private static kColorOffset = 0;
     private static kScaleOffset = 4;
     private static kOffsetOffset = 6;
-    private static aspect = 1;
     private static color: [number, number, number, number] = [0, 1, 0, 1]
     private static scale: [number, number] = [0.5, 0.5]
     private static offset: [number, number] = [-0.5, -0.25]
     private static uniformValues: Float32Array
     private static uniformBuffer: GPUBuffer
-    private static isInited = false
     private static valueChange = true
 
     static async initalize(device: GPUDevice) {
 
-        UniformTriangle.device = device;
-
-        //#region initilize
-        const canvas = document.querySelector('#canvas5') as HTMLCanvasElement;
-        const context = UniformTriangle.context = canvas!.getContext('webgpu')!;
-        // "bgra8unorm"
-        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-        context?.configure({
-            device,
-            format: presentationFormat,
-        });
-        //#endregion
-
+        await super.initialize(device);
+        super.initCanvas('uniformTriangle')
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -79,7 +64,7 @@ export class UniformTriangle {
                 entryPoint: 'fs',
                 module,
                 targets: [
-                    { format: presentationFormat },
+                    { format: this.presentationFormat },
                 ],
             },
         });
@@ -98,7 +83,6 @@ export class UniformTriangle {
 
         // create a typedarray to hold the values for the uniforms in JavaScript
         UniformTriangle.uniformValues = new Float32Array(uniformBufferSize / 4);
-        UniformTriangle.aspect = canvas.width / canvas.height;
 
         UniformTriangle.bindGroup = device.createBindGroup({
             layout: UniformTriangle.pipeline.getBindGroupLayout(0),
@@ -117,7 +101,7 @@ export class UniformTriangle {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
-                    view: context!.getCurrentTexture().createView(),
+                    view: this.context!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -159,7 +143,7 @@ export class UniformTriangle {
 
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(UniformTriangle.renderPassDescriptor);
-        pass.setPipeline(UniformTriangle.pipeline);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setBindGroup(0, UniformTriangle.bindGroup);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();

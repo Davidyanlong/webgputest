@@ -1,36 +1,22 @@
+import { Base } from "./base";
+
 /**
  * 渲染基本流程
  * bindGroup / uniform 学习
  */
-export class MultUniformTriangle {
-    private static pipeline: GPURenderPipeline
-    private static renderPassDescriptor: GPURenderPassDescriptor
-    private static context: GPUCanvasContext
-    private static device: GPUDevice
+export class MultUniformTriangle extends Base{
     private static kColorOffset = 0;
     private static kScaleOffset = 0;
     private static kOffsetOffset = 4;
-    private static aspect = 1;
 
     private static kNumObjects = 100;
     private static objectInfos:ObjectInfo[] = [];
-    private static isInited = false
 
 
     static async initalize(device: GPUDevice) {
 
-        MultUniformTriangle.device = device;
-
-        //#region initilize
-        const canvas = document.querySelector('#canvas6') as HTMLCanvasElement;
-        const context = MultUniformTriangle.context = canvas!.getContext('webgpu')!;
-        // "bgra8unorm"
-        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-        context?.configure({
-            device,
-            format: presentationFormat,
-        });
-        //#endregion
+        await super.initialize(device);
+        super.initCanvas('multUniformTriangle')
 
 
         //#region  shaderModule
@@ -80,7 +66,7 @@ export class MultUniformTriangle {
                 entryPoint: 'fs',
                 module,
                 targets: [
-                    { format: presentationFormat },
+                    { format: this.presentationFormat },
                 ],
             },
         });
@@ -146,7 +132,7 @@ export class MultUniformTriangle {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
-                    view: context!.getCurrentTexture().createView(),
+                    view: this.context!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -177,7 +163,7 @@ export class MultUniformTriangle {
 
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(MultUniformTriangle.renderPassDescriptor);
-        pass.setPipeline(MultUniformTriangle.pipeline);
+        pass.setPipeline(MultUniformTriangle.pipeline as GPURenderPipeline);
         // 渲染多个对象
         for (const {scale, bindGroup, uniformBuffer, uniformValues} of MultUniformTriangle.objectInfos) {
             uniformValues.set([scale / MultUniformTriangle.aspect, scale], MultUniformTriangle.kScaleOffset); // set the scale

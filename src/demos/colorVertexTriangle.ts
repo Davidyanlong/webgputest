@@ -1,29 +1,16 @@
+import { Base } from "./base"
+
 /**
  * 渲染基本流程
  * 顶点着色渲染
  */
-export class ColorVertexTriangle {
-    private static pipeline: GPURenderPipeline
-    private static renderPassDescriptor: GPURenderPassDescriptor
-    private static context: GPUCanvasContext
-    private static device:GPUDevice
-    private static isInited = false
-
+export class ColorVertexTriangle  extends Base{
     static async initalize(device: GPUDevice) {
 
+        await super.initialize(device);
+        super.initCanvas('colorVertexTriangle')
+
         ColorVertexTriangle.device = device;
-
-        //#region initilize
-        const canvas = document.querySelector('#canvas3') as HTMLCanvasElement;
-        const context = ColorVertexTriangle.context= canvas!.getContext('webgpu')!;
-        // "bgra8unorm"
-        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-        context?.configure({
-            device,
-            format: presentationFormat,
-        });
-
-        //#endregion
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -79,7 +66,7 @@ export class ColorVertexTriangle {
                 entryPoint: 'fs',
                 module,
                 targets: [
-                    { format: presentationFormat }
+                    { format: this.presentationFormat }
                 ],
             },
         });
@@ -91,7 +78,7 @@ export class ColorVertexTriangle {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
-                    view: context!.getCurrentTexture().createView(),
+                    view: this.context!.getCurrentTexture().createView(),
                     clearValue: [0.3, 0.3, 0.3, 1],
                     loadOp: 'clear',
                     storeOp: 'store',
@@ -121,7 +108,7 @@ export class ColorVertexTriangle {
 
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(ColorVertexTriangle.renderPassDescriptor);
-        pass.setPipeline(ColorVertexTriangle.pipeline);
+        pass.setPipeline(ColorVertexTriangle.pipeline as GPURenderPipeline);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();
 

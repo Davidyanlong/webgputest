@@ -1,17 +1,15 @@
+import { Base } from "./base"
 
-export class SimpleCompute {
-    private static pipeline: GPUComputePipeline
+export class SimpleCompute extends Base {
     private static bindGroup: GPUBindGroup
     private static input: Float32Array=new Float32Array(3)
     private static workBuffer: GPUBuffer
     private static resultBuffer: GPUBuffer
-    private static device: GPUDevice
-    private static isInited = false
     private static isComputed:boolean;
 
     static async initalize(device: GPUDevice) {
 
-        SimpleCompute.device = device;
+       await super.initialize(device)
 
         //#region  compute pipeline
         const computeModule: GPUShaderModule = device.createShaderModule({
@@ -29,7 +27,7 @@ export class SimpleCompute {
         });
 
 
-        SimpleCompute.pipeline = device.createComputePipeline({
+        this.pipeline = device.createComputePipeline({
             label: 'doubling compute pipeline',
             layout: 'auto',
             compute: {
@@ -101,7 +99,7 @@ export class SimpleCompute {
         const computePass = computeEncoder.beginComputePass({
             label: 'doubling compute pass',
         });
-        computePass.setPipeline(SimpleCompute.pipeline);
+        computePass.setPipeline(this.pipeline as GPUComputePipeline);
         computePass.setBindGroup(0, SimpleCompute.bindGroup);
         computePass.dispatchWorkgroups(SimpleCompute.input.length);
         computePass.end();

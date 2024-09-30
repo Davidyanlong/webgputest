@@ -8,6 +8,7 @@ import { UniformTriangle } from './demos/uniformTriangle';
 import { MultUniformTriangle } from './demos/multUniformTriangle';
 import { StorageBufferTriangles } from './demos/storageBufferTriangles';
 import { VertexBufferTriangles } from './demos/vertexBufferTriangles';
+import { TextureF } from './demos/textureF';
 
 export class Application {
     static async initalize() {
@@ -37,6 +38,9 @@ export class Application {
 
         // Vertex buffer
         VertexBufferTriangles.initalize(GPUContext.device)
+
+        // TextureF base
+        TextureF.initalize(GPUContext.device);
     }
     static update() {
         // 简单三角形
@@ -57,6 +61,8 @@ export class Application {
         StorageBufferTriangles.update();
 
         VertexBufferTriangles.update();
+
+        TextureF.update();
 
     }
 
@@ -79,6 +85,8 @@ export class Application {
 
         VertexBufferTriangles.draw();
 
+        TextureF.draw();
+
     }
     static destory() {
         SimpleTriangle.destory();
@@ -89,6 +97,8 @@ export class Application {
         MultUniformTriangle.destory();
         StorageBufferTriangles.destory();
         VertexBufferTriangles.destory();
+
+        TextureF.destory();
 
     }
 }

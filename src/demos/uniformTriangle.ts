@@ -1,4 +1,6 @@
 import { Base } from "./base"
+import shadercode from '../shaders/uniformTriangle/uniform_triangle.wgsl?raw'
+import { hexToRgb } from "../utils/color";
 
 /**
  * 渲染基本流程
@@ -24,30 +26,7 @@ export class UniformTriangle extends Base {
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'triangle shaders with uniforms',
-            code: `
-                struct OurStruct {
-                    color: vec4f,
-                    scale: vec2f,
-                    offset: vec2f,
-                };
- 
-                @group(0) @binding(0) var<uniform> ourStruct: OurStruct;
-                @vertex fn vs(
-                    @builtin(vertex_index) vertexIndex : u32
-                ) -> @builtin(position) vec4f {
-                    let pos = array(
-                    vec2f( 0.0,  0.5),  // top center
-                    vec2f(-0.5, -0.5),  // bottom left
-                    vec2f( 0.5, -0.5)   // bottom right
-                    );
-            
-                   return vec4f(pos[vertexIndex] * ourStruct.scale + ourStruct.offset, 0.0, 1.0);
-                }
-            
-                @fragment fn fs() -> @location(0) vec4f {
-                   return ourStruct.color;
-                }
-        `,
+            code: shadercode,
         });
 
         //#endregion
@@ -169,6 +148,7 @@ export class UniformTriangle extends Base {
        
        
     }
+    //#region  user control
     private static initHTMLControl() {
         const parentDom = (this.context.canvas as HTMLCanvasElement).parentElement!;
         parentDom.style.position = 'relative';
@@ -236,12 +216,7 @@ export class UniformTriangle extends Base {
         UniformTriangle.offset[0] = +value
         UniformTriangle.valueChange = true;
     }
+    //#endregion
 }
 
-function hexToRgb(hex: string): [number, number, number] {
-    return [
-        parseInt('0x' + hex.slice(1, 3)) / 255,
-        parseInt('0x' + hex.slice(3, 5)) / 255,
-        parseInt('0x' + hex.slice(5, 7)) / 255
-    ];
-}
+

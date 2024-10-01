@@ -1,5 +1,5 @@
 import { Base } from "./base"
-import ShaderCode from '../shaders/texture_mipmap.wgsl?raw'
+import shadercode from '../shaders/texturemipmaps/texture_mipmap.wgsl?raw'
 import { typeArray } from "../utils/utils"
 import { createBlendedMipmap } from "../utils/createBlendedMipmap"
 import { createCheckedMipmap } from "../utils/createCheckedMipmap"
@@ -24,7 +24,7 @@ export class TextureMipMap extends Base {
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
-            code: ShaderCode,
+            code: shadercode,
         });
 
         //#endregion

@@ -1,4 +1,6 @@
 import { Base } from "./base"
+import vscode from '../shaders/checkerboard/checkerboard.vs.wgsl?raw'
+import fscode from '../shaders/checkerboard/checkerboard.fs.wgsl?raw'
 
 /**
  * 渲染基本流程
@@ -7,53 +9,19 @@ import { Base } from "./base"
 export class Checkerboard extends Base {
 
     static async initalize(device: GPUDevice) {
-        
+
         await super.initialize(device);
         super.initCanvas('checkerboard')
 
         //#region  shaderModule
         const vsModule = device.createShaderModule({
             label: 'hardcoded triangle',
-            code: `
-              struct OurVertexShaderOutput {
-                @builtin(position) position: vec4f,
-                // 数据传递方式 perspective linear flat
-                 @location(1) @interpolate(linear) z: f32
-              };
-         
-              @vertex fn vs(
-                @builtin(vertex_index) vertexIndex : u32
-              ) -> OurVertexShaderOutput {
-                let pos = array(
-                  vec2f( 0.0,  0.5),  // top center
-                  vec2f(-0.5, -0.5),  // bottom left
-                  vec2f( 0.5, -0.5)   // bottom right
-                );
-         
-                var vsOutput: OurVertexShaderOutput;
-                vsOutput.position = vec4f(pos[vertexIndex], 0.0, 1.0);
-                vsOutput.z = abs(vsOutput.position.x+0.5);
-                return vsOutput;
-              }
-            `,
+            code: vscode,
         });
 
         const fsModule = device.createShaderModule({
             label: 'checkerboard',
-            code: `
-              @fragment fn fs(
-              //  @builtin(position) 数据的区间是[0,300] 屏幕坐标
-              @builtin(position) pixelPosition: vec4f,   
-               @location(1) @interpolate(linear) z: f32,
-              ) -> @location(0) vec4f {
-                let red = vec4f(1, 0, 0, 1);
-                let cyan = vec4f(0, 1, 1, 1);
-                let grid = vec2u(pixelPosition.xy) / 8;
-                let checker = (grid.x + grid.y) % 2 == 1;
-         
-                return  select(red, cyan, checker);
-              }
-            `,
+            code: fscode,
         });
 
         //#endregion
@@ -63,11 +31,9 @@ export class Checkerboard extends Base {
             label: 'our hardcoded red triangle pipeline',
             layout: 'auto',
             vertex: {
-                entryPoint: 'vs',
                 module: vsModule,
             },
             fragment: {
-                entryPoint: 'fs',
                 module: fsModule,
                 targets: [
                     { format: this.presentationFormat }

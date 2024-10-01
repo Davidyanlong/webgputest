@@ -1,4 +1,17 @@
 
+
+export function rand(min?: number, max?: number) {
+  if (min === undefined) {
+      min = 0;
+      max = 1;
+  } else if (max === undefined) {
+      max = min;
+      min = 0;
+  }
+  return min + Math.random() * (max - min);
+};
+
+
 // 插值
 export const lerp = (a:number, b:number, t:number):number => a + (b - a) * t;
   

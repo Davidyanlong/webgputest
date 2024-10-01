@@ -10,6 +10,7 @@ import { StorageBufferTriangles } from './demos/storageBufferTriangles';
 import { VertexBufferTriangles } from './demos/vertexBufferTriangles';
 import { TextureF } from './demos/textureF';
 import { TextureFSampler } from './demos/textureFSampler';
+import { TextureMipMap } from './demos/texturemipmap'
 
 export class Application {
     static async initalize() {
@@ -44,6 +45,8 @@ export class Application {
         TextureF.initalize(GPUContext.device);
 
         TextureFSampler.initalize(GPUContext.device);
+
+        TextureMipMap.initalize(GPUContext.device);
     }
     static update() {
         // 简单三角形
@@ -68,6 +71,8 @@ export class Application {
         TextureF.update();
 
         TextureFSampler.update();
+
+        TextureMipMap.update();
 
     }
 
@@ -94,6 +99,8 @@ export class Application {
 
         TextureFSampler.draw();
 
+        TextureMipMap.draw();
+
     }
     static destory() {
         SimpleTriangle.destory();
@@ -104,9 +111,11 @@ export class Application {
         MultUniformTriangle.destory();
         StorageBufferTriangles.destory();
         VertexBufferTriangles.destory();
-        TextureFSampler.destory();
-
+        
         TextureF.destory();
+        TextureFSampler.destory();
+        TextureMipMap.destory();
+
 
     }
 }

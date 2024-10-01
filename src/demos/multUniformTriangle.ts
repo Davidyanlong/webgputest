@@ -14,7 +14,7 @@ export class MultUniformTriangle extends Base{
     private static objectInfos:ObjectInfo[] = [];
 
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('multUniformTriangle')

@@ -23,7 +23,7 @@ export class VertexBufferTriangles extends Base{
     private static objectInfos:{scale:number}[] = [];
 
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('vertexBufferTriangles')

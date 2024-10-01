@@ -11,6 +11,8 @@ import { VertexBufferTriangles } from './demos/vertexBufferTriangles';
 import { TextureF } from './demos/textureF';
 import { TextureFSampler } from './demos/textureFSampler';
 import { TextureMipMap } from './demos/texturemipmap'
+import { TextureImage } from './demos/textureImage';
+import { TextureImageMipmap } from './demos/textureImageMipmap';
 
 export class Application {
     static async initalize() {
@@ -18,35 +20,39 @@ export class Application {
         await GPUContext.initialize();
 
         // 简单三角形初始化
-        SimpleTriangle.initalize(GPUContext.device);
+        SimpleTriangle.initialize(GPUContext.device);
 
         // 简单的计算管线
-        SimpleCompute.initalize(GPUContext.device);
+        SimpleCompute.initialize(GPUContext.device);
 
         // 顶点着色
-        ColorVertexTriangle.initalize(GPUContext.device);
+        ColorVertexTriangle.initialize(GPUContext.device);
 
         // 棋盘渲染
-        Checkerboard.initalize(GPUContext.device);
+        Checkerboard.initialize(GPUContext.device);
 
         // Uniform 测试
-        UniformTriangle.initalize(GPUContext.device);
+        UniformTriangle.initialize(GPUContext.device);
 
         // Uniform 多个三角形 多个bindGroup
-        MultUniformTriangle.initalize(GPUContext.device);
+        MultUniformTriangle.initialize(GPUContext.device);
 
         // storage buffer
-        StorageBufferTriangles.initalize(GPUContext.device);
+        StorageBufferTriangles.initialize(GPUContext.device);
 
         // Vertex buffer
-        VertexBufferTriangles.initalize(GPUContext.device)
+        VertexBufferTriangles.initialize(GPUContext.device)
 
         // TextureF base
-        TextureF.initalize(GPUContext.device);
+        TextureF.initialize(GPUContext.device);
 
-        TextureFSampler.initalize(GPUContext.device);
+        TextureFSampler.initialize(GPUContext.device);
 
-        TextureMipMap.initalize(GPUContext.device);
+        TextureMipMap.initialize(GPUContext.device);
+
+        TextureImage.initialize(GPUContext.device);
+
+        TextureImageMipmap.initialize(GPUContext.device);
     }
     static update() {
         // 简单三角形
@@ -73,6 +79,10 @@ export class Application {
         TextureFSampler.update();
 
         TextureMipMap.update();
+
+        TextureImage.update();
+
+        TextureImageMipmap.update();
 
     }
 
@@ -101,6 +111,10 @@ export class Application {
 
         TextureMipMap.draw();
 
+        TextureImage.draw();
+
+        TextureImageMipmap.draw();
+
     }
     static destory() {
         SimpleTriangle.destory();
@@ -115,6 +129,8 @@ export class Application {
         TextureF.destory();
         TextureFSampler.destory();
         TextureMipMap.destory();
+        TextureImage.destory();
+        TextureImageMipmap.destory();
 
 
     }

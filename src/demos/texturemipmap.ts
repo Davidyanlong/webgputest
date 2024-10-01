@@ -14,7 +14,7 @@ export class TextureMipMap extends Base {
     private static objectInfos:objectInfoInterface[] = []
     private static texNdx = 0;
     private static viewProjectionMatrix:Float32Array
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('textureMipMap')

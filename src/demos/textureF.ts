@@ -7,7 +7,7 @@ import shadercode from '../shaders/textureF/texture_f.wgsl?raw'
  */
 export class TextureF extends Base{
     private static bindGroup:GPUBindGroup
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('textureF')

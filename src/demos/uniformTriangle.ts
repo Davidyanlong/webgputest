@@ -18,7 +18,7 @@ export class UniformTriangle extends Base {
     private static uniformBuffer: GPUBuffer
     private static valueChange = true
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('uniformTriangle')

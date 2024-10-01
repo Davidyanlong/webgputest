@@ -23,7 +23,7 @@ export class StorageBufferTriangles extends Base{
     private static numVertices:number;
 
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
         await super.initialize(device)
         this.initCanvas('storageBufferTriangles')
 

@@ -8,7 +8,7 @@ export class SimpleCompute extends Base {
     private static resultBuffer: GPUBuffer
     private static isComputed:boolean;
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
        await super.initialize(device)
 

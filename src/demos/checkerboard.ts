@@ -8,7 +8,7 @@ import fscode from '../shaders/checkerboard/checkerboard.fs.wgsl?raw'
  */
 export class Checkerboard extends Base {
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('checkerboard')

@@ -1,17 +1,18 @@
 import { Base } from "./base"
-import shadercode from '../shaders/textureFSampler/texturef_sampler.wgsl?raw'
+import shadercode from '../shaders/textureF/texture_f.wgsl?raw'
+import { loadImageBitmap } from "../utils/res"
 
 /**
  * 渲染基本流程
  * 简单的三角形
  */
-export class TextureFSampler extends Base{
-    private static bindGroups:GPUBindGroup[] = []
+export class TextureImage extends Base {
+    private static bindGroups: GPUBindGroup[] = []
     private static settings:Record<string,string>
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
-        super.initCanvas('textureFSampler')
+        super.initCanvas('textureImage')
 
         this.settings = {
             addressModeU: 'repeat',
@@ -48,7 +49,7 @@ export class TextureFSampler extends Base{
 
         //#endregion
 
-        this.initTexture()
+        await this.initTexture()
 
 
         //#region  渲染队列参数
@@ -67,69 +68,56 @@ export class TextureFSampler extends Base{
         this.isInited = true;
     }
 
-    private static initTexture(){
-        const kTextureWidth = 5;
-        const kTextureHeight = 7;
-        const _ = [255,   0,   0, 255];  // red
-        const y = [255, 255,   0, 255];  // yellow
-        const b = [  0,   0, 255, 255];  // blue
-        const textureData = new Uint8Array([
-            _, _, _, _, _,
-            _, y, _, _, _,
-            _, y, _, _, _,
-            _, y, y, _, _,
-            _, y, _, _, _,
-            _, y, y, y, _,
-            b, _, _, _, _,
-        ].flat());
-
-
+    private static async initTexture() {
+        const url = './f-texture.png';
+        const source = await loadImageBitmap(url);
         const texture = this.device.createTexture({
-            label: 'yellow F on red',
-            size: [kTextureWidth, kTextureHeight],
+            label: url,
             format: 'rgba8unorm',
-            usage:
-              GPUTextureUsage.TEXTURE_BINDING |
-              GPUTextureUsage.COPY_DST,
+            size: [source.width, source.height],
+            usage: GPUTextureUsage.TEXTURE_BINDING |
+                GPUTextureUsage.COPY_DST |
+                GPUTextureUsage.RENDER_ATTACHMENT,
         });
-
-        this.device.queue.writeTexture(
+        this.device.queue.copyExternalImageToTexture(
+            { source, flipY: true },
             { texture },
-            textureData,
-            { bytesPerRow: kTextureWidth * 4 },
-            { width: kTextureWidth, height: kTextureHeight },
+            { width: source.width, height: source.height },
         );
-      
+
+  
         for (let i = 0; i < 8; ++i) {
             const sampler = this.device.createSampler({
-              addressModeU: (i & 1) ? 'repeat' : 'clamp-to-edge',
-              addressModeV: (i & 2) ? 'repeat' : 'clamp-to-edge',
-              magFilter: (i & 4) ? 'linear' : 'nearest',
+                addressModeU: (i & 1) ? 'repeat' : 'clamp-to-edge',
+                addressModeV: (i & 2) ? 'repeat' : 'clamp-to-edge',
+                magFilter: (i & 4) ? 'linear' : 'nearest',
             });
-        
+
             const bindGroup = this.device.createBindGroup({
-              layout: this.pipeline.getBindGroupLayout(0),
-              entries: [
-                { binding: 0, resource: sampler },
-                { binding: 1, resource: texture.createView() },
-              ],
+                layout: this.pipeline.getBindGroupLayout(0),
+                entries: [
+                    { binding: 0, resource: sampler },
+                    { binding: 1, resource: texture.createView() },
+                ],
             });
             this.bindGroups.push(bindGroup);
-          }
 
-    }
-    static update() {
-       
+        }
     }
 
     static draw() {
-        if(!this.isInited) return;
+        if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
         let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
 
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
+
+            const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
+            (this.settings.addressModeV === 'repeat' ? 2 : 0) +
+            (this.settings.magFilter === 'linear' ? 4 : 0);
+            const bindGroup = this.bindGroups[ndx];
 
 
         // make a command encoder to start encoding commands
@@ -140,14 +128,6 @@ export class TextureFSampler extends Base{
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
-
-        const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
-                (this.settings.addressModeV === 'repeat' ? 2 : 0) +
-                (this.settings.magFilter === 'linear' ? 4 : 0);
-
-        const bindGroup = this.bindGroups[ndx];
-
-
         pass.setBindGroup(0, bindGroup);
         pass.draw(6);  // call our vertex shader 3 times
         pass.end();
@@ -156,8 +136,6 @@ export class TextureFSampler extends Base{
         this.device!.queue.submit([commandBuffer]);
     }
     static initGUI(){
-       
-
         const addressOptions = ['repeat', 'clamp-to-edge'];
         const filterOptions = ['nearest', 'linear'];
         // @ts-ignore

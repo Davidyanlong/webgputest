@@ -8,7 +8,7 @@ import shadercode from '../shaders/simpleTriangle/simple_triangle.wgsl?raw'
 export class SimpleTriangle extends Base{
     private static context2: GPUCanvasContext
 
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('simpleTriangle1')

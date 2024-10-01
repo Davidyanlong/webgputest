@@ -6,7 +6,7 @@ import shadercode from '../shaders/colorvertextriangle/color_vertex_triangle.wgs
  * 顶点着色渲染
  */
 export class ColorVertexTriangle  extends Base{
-    static async initalize(device: GPUDevice) {
+    static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('colorVertexTriangle')

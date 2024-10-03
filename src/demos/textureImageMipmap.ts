@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?raw'
 import { GenerateMips } from "../common/generateMips"
 import { mat4 } from "wgpu-matrix"

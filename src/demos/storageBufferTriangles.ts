@@ -1,4 +1,4 @@
-import { Base } from "./base";
+import { Base } from "../common/base";
 import shadercode from '../shaders/storageBufferTriangles/storage_buffer_triangles.wgsl?raw'
 import { createCircleVertices } from "../utils/createCircleVertices";
 import { rand } from "../utils/utils";

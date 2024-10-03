@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import shadercode from '../shaders/uniformTriangle/uniform_triangle.wgsl?raw'
 import { hexToRgb } from "../utils/color";
 

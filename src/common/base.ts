@@ -11,9 +11,11 @@ export class Base {
         this.device = device;
         this.isInited = false;
     }
-    protected static initCanvas(canvasId: string, isOut = false) {
+    protected static initCanvas(canvasId: string, isOut = false, parentDom:HTMLDivElement|null = null) {
+
+        let canvas:HTMLCanvasElement|null = this.createDom(canvasId, parentDom);
         //#region initilize
-        const canvas = document.querySelector(`#${canvasId}`) as HTMLCanvasElement;
+        canvas ||=  document.querySelector(`#${canvasId}`) as HTMLCanvasElement;
         const context = canvas!.getContext('webgpu')!;
         if (!isOut) {
             this.context = context;
@@ -35,4 +37,21 @@ export class Base {
     public static update() { }
     public static draw() { }
     public static destory() { }
+
+    private static createDom(canvasId:string, parentDom:HTMLDivElement|null = null):HTMLCanvasElement | null{
+        let canvas:HTMLCanvasElement|null = null;
+        if(parentDom===null){
+            parentDom =document.createElement('div') as HTMLDivElement;
+            parentDom.className = 'col'; 
+            canvas = document.createElement('canvas') as HTMLCanvasElement;
+            canvas.id=`${canvasId}`
+            const containerDom = document.querySelector('.container') as HTMLDivElement;
+            
+            parentDom.appendChild(canvas);
+            containerDom.appendChild(parentDom);
+        }
+
+        return canvas;
+
+    }
 }

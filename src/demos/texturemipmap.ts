@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import shadercode from '../shaders/texturemipmaps/texture_mipmap.wgsl?raw'
 import { typeArray } from "../utils/utils"
 import { createBlendedMipmap } from "../utils/createBlendedMipmap"

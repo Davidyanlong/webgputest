@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import shadercode from '../shaders/textureFSampler/texturef_sampler.wgsl?raw'
 
 /**

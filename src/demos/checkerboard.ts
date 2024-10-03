@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import vscode from '../shaders/checkerboard/checkerboard.vs.wgsl?raw'
 import fscode from '../shaders/checkerboard/checkerboard.fs.wgsl?raw'
 
@@ -44,7 +44,7 @@ export class Checkerboard extends Base {
         //#endregion
 
         //#region  渲染队列参数
-        Checkerboard.renderPassDescriptor = {
+        this.renderPassDescriptor = {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
@@ -56,31 +56,31 @@ export class Checkerboard extends Base {
             ],
         };
         //#endregion
-        Checkerboard.isInited = true;
+        this.isInited = true;
     }
 
     static draw() {
-        if (!Checkerboard.isInited) return;
+        if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
-        let colorAttach = Array.from(Checkerboard.renderPassDescriptor.colorAttachments)[0];
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
 
         colorAttach && (colorAttach.view =
-            Checkerboard.context!.getCurrentTexture().createView());
+            this.context!.getCurrentTexture().createView());
 
         // make a command encoder to start encoding commands
-        const encoder = Checkerboard.device!.createCommandEncoder({
+        const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'
         });
 
         // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(Checkerboard.renderPassDescriptor);
-        pass.setPipeline(Checkerboard.pipeline as GPURenderPipeline);
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();
 
         const commandBuffer = encoder.finish();
-        Checkerboard.device!.queue.submit([commandBuffer]);
+        this.device!.queue.submit([commandBuffer]);
     }
 }
 

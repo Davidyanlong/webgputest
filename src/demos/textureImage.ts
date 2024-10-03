@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import shadercode from '../shaders/textureF/texture_f.wgsl?raw'
 import { loadImageBitmap } from "../utils/res"
 

@@ -1,4 +1,4 @@
-import { Base } from "./base"
+import { Base } from "../common/base"
 import shadercode from '../shaders/simpleCompute/simple_compute.wgsl?raw'
 
 export class SimpleCompute extends Base {

@@ -2,26 +2,23 @@ import { Base } from "../common/base"
 import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?raw'
 import { GenerateMips } from "../common/generateMips"
 import { mat4 } from "wgpu-matrix"
+import { CanvasAnimationTexture } from "../utils/createCanvasTexture"
 
 /**
  * 渲染基本流程
  * 简单的三角形
  */
-export class TextureImageMipmap extends Base {
+export class TextureCanvasMipmap extends Base {
     private static objectInfos:objectInfoInterface[] = []
     private static texNdx = 0;
     private static viewProjectionMatrix:Float32Array
+    private static canvasAnimationTexture:CanvasAnimationTexture
+    private static texture:GPUTexture
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
-        super.initCanvas('textureImageMipmap')
+        super.initCanvas('textureCanvasMipmap')
 
-
-
-
-        //#endregion
-
-        //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
             code: shadercode,
@@ -45,7 +42,7 @@ export class TextureImageMipmap extends Base {
         });
 
         //#endregion
-
+        
         const textures = await this.initTexture()
 
         this.context.canvas.addEventListener('click', () => {
@@ -85,13 +82,15 @@ export class TextureImageMipmap extends Base {
     }
 
     private static async initTexture() {
+
+        this.canvasAnimationTexture = new CanvasAnimationTexture()
+        this.canvasAnimationTexture.initialize();
+        this.canvasAnimationTexture.update2DCanvas(0);
+
+        this.texture = GenerateMips.createTextureFromSource(this.device, this.canvasAnimationTexture.ctx.canvas, {mips: true})
+
         const textures = await Promise.all([
-            await GenerateMips.createTextureFromImage(this.device,
-                './f-texture.png', { mips: true, flipY: false }),
-            await GenerateMips.createTextureFromImage(this.device,
-                './coins.jpg', { mips: true }),
-            await GenerateMips.createTextureFromImage(this.device,
-                './Granite_paving_tileable_512x512.jpeg', { mips: true }),
+            this.texture
         ]);
 
         // offsets to the various uniform values in float32 indices
@@ -138,6 +137,11 @@ export class TextureImageMipmap extends Base {
             });
         }
         return textures;
+    }
+    static update(dt:number){
+        if(!this.isInited) return;
+        this.canvasAnimationTexture.update2DCanvas(dt);
+        CanvasAnimationTexture.copySourceToTexture(this.device, this.texture,   this.canvasAnimationTexture.ctx.canvas);
     }
 
     static draw(dt:number) {

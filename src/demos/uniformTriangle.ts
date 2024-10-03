@@ -93,7 +93,7 @@ export class UniformTriangle extends Base {
         UniformTriangle.isInited = true;
     }
 
-    static update() {
+    static update(dt:number) {
         if (!UniformTriangle.isInited) return;
         if (UniformTriangle.valueChange) {
             UniformTriangle.uniformValues.set(UniformTriangle.color, UniformTriangle.kColorOffset);        // set the color
@@ -106,7 +106,7 @@ export class UniformTriangle extends Base {
         }
     }
 
-    static draw() {
+    static draw(dt:number) {
         if (!UniformTriangle.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.

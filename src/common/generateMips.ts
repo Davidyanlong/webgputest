@@ -72,7 +72,7 @@ export class GenerateMips {
     }
 
    
-    public static createTextureFromSource(device:GPUDevice, source:ImageBitmap, options:textureParams = {}) {
+    public static createTextureFromSource(device:GPUDevice, source:ImageBitmap|HTMLCanvasElement, options:textureParams = {}) {
         const texture = device.createTexture({
           format: 'rgba8unorm',
           mipLevelCount: options.mips ? this.numMipLevels(source.width, source.height) : 1,
@@ -96,7 +96,7 @@ export class GenerateMips {
         return 1 + Math.log2(maxSize) | 0;
     };
 
-    private static copySourceToTexture(device:GPUDevice, texture:GPUTexture, source:ImageBitmap, {flipY}:{flipY?:boolean} = {}) {
+    private static copySourceToTexture(device:GPUDevice, texture:GPUTexture, source:ImageBitmap|HTMLCanvasElement, {flipY}:{flipY?:boolean} = {}) {
         device.queue.copyExternalImageToTexture(
           { source, flipY, },
           { texture },

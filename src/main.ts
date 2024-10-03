@@ -4,12 +4,12 @@ import {Application} from "../src/application"
 
 Application.initalize();
 
-function tick(){
-  Application.update();
-  Application.draw();
+function tick(dt:number){
+  Application.update(dt);
+  Application.draw(dt);
   requestAnimationFrame(tick);
 }
 
 
-tick();
+tick(0);
 

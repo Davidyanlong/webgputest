@@ -117,11 +117,7 @@ export class MultUniformTriangle extends Base{
         MultUniformTriangle.isInited = true;
     }
 
-    static update() {
-        if (!MultUniformTriangle.isInited) return;
-    }
-
-    static draw() {
+    static draw(dt:number) {
         if (!MultUniformTriangle.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
@@ -151,9 +147,6 @@ export class MultUniformTriangle extends Base{
 
         const commandBuffer = encoder.finish();
         MultUniformTriangle.device!.queue.submit([commandBuffer]);
-    }
-    static destory() {
-      
     }
 
 

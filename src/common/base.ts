@@ -1,3 +1,4 @@
+import { GPUContext } from "./gpuContext";
 
 export class Base {
     protected static pipeline: GPURenderPipeline | GPUComputePipeline
@@ -17,18 +18,22 @@ export class Base {
         //#region initilize
         canvas ||=  document.querySelector(`#${canvasId}`) as HTMLCanvasElement;
         const context = canvas!.getContext('webgpu')!;
+
+        const hasBGRA8unormStorage =  GPUContext.adapter!.features.has('bgra8unorm-storage');
+        const presentationFormat =hasBGRA8unormStorage? navigator.gpu.getPreferredCanvasFormat():'rgba8unorm';
         if (!isOut) {
             this.context = context;
             this.aspect = canvas.width / canvas.height;
             // "bgra8unorm"
-            this.presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+            this.presentationFormat = presentationFormat
         }
 
 
         const device = this.device;
+        
         context?.configure({
             device,
-            format: this.presentationFormat,
+            format: presentationFormat,
         });
         return context;
 

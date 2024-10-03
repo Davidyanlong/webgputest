@@ -16,6 +16,7 @@ import { TextureCanvasMipmap } from "./textureCanvasMipmap";
 import { TextureVideoMipmap } from "./textureVideoMipmap";
 import { TextureVideo } from "./textureVideo";
 import { CubeTexture } from "./cubeTexture";
+import { StorageTexture } from "./storageTexture";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -36,4 +37,5 @@ export const demos = [
     TextureVideoMipmap,
     TextureVideo,
     CubeTexture,
+    StorageTexture
 ]

@@ -1,5 +1,5 @@
 
-import { GPUContext } from './gpuContext'
+import { GPUContext } from './common/gpuContext'
 import {demos} from './demos/index'
 export class Application {
     static async initalize() {

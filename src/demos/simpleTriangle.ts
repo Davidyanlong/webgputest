@@ -67,7 +67,7 @@ export class SimpleTriangle extends Base{
     }
 
 
-    static draw(dt:number) {
+    static draw() {
         if(!SimpleTriangle.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.

@@ -10,7 +10,6 @@ import { startPlayingAndWaitForVideo } from "../utils/video"
  */
 export class TextureVideo extends Base {
     private static objectInfos:objectInfoInterface[] = []
-    private static texNdx = 0;
     private static viewProjectionMatrix:Float32Array
     private static texture:GPUTexture
     private static video:HTMLVideoElement
@@ -137,7 +136,7 @@ export class TextureVideo extends Base {
         return textures;
     }
 
-    static draw(dt:number) {
+    static draw() {
         if (!this.isInited) return;
 
         // Get the current texture from the canvas context and

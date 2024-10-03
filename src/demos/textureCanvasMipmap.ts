@@ -144,7 +144,7 @@ export class TextureCanvasMipmap extends Base {
         GenerateMips.copySourceToTexture(this.device, this.texture,   this.canvasAnimationTexture.ctx.canvas);
     }
 
-    static draw(dt:number) {
+    static draw() {
         if (!this.isInited) return;
 
         // Get the current texture from the canvas context and

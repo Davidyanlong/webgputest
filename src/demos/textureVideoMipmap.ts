@@ -43,7 +43,7 @@ export class TextureVideoMipmap extends Base {
 
         //#endregion
         
-        const textures = await this.initTexture()
+        await this.initTexture()
 
         this.context.canvas.addEventListener('click', () => {
             if (this.video.paused) {
@@ -147,12 +147,12 @@ export class TextureVideoMipmap extends Base {
         }
         return textures;
     }
-    static update(dt:number){
+    static update(){
         if(!this.isInited) return;
         GenerateMips.copySourceToTexture(this.device, this.texture,   this.video);
     }
 
-    static draw(dt:number) {
+    static draw() {
         if (!this.isInited) return;
 
         // Get the current texture from the canvas context and

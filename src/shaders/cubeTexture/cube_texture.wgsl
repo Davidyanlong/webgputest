@@ -19,10 +19,19 @@ struct VSOutput {
 @vertex fn vs(vert : Vertex) -> VSOutput {
     var vsOut : VSOutput;
     vsOut.position = uni.matrix * vert.position;
+ 
     vsOut.normal = normalize(vert.position.xyz);
     return vsOut;
 }
 
 @fragment fn fs(vsOut : VSOutput) -> @location(0) vec4f {
+
+    // textureSample(tex, sampler, vec3f( 1, 0, 0)) => center of layer 0
+    // textureSample(tex, sampler, vec3f(-1, 0, 0)) => center of layer 1
+    // textureSample(tex, sampler, vec3f( 0, 1, 0)) => center of layer 2
+    // textureSample(tex, sampler, vec3f( 0,-1, 0)) => center of layer 3
+    // textureSample(tex, sampler, vec3f( 0, 0, 1)) => center of layer 4
+    // textureSample(tex, sampler, vec3f( 0, 0,-1)) => center of layer 5
+
     return textureSample(ourTexture, ourSampler, normalize(vsOut.normal));
 }

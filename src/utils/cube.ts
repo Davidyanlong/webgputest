@@ -13,6 +13,15 @@ function generateFace(size: number, { faceColor, textColor, text }: { faceColor:
     return canvas;
 }
 
+/**
+ * layer 0 => positive x
+ * layer 1 => negative x
+ * layer 2 => positive y
+ * layer 3 => negative y
+ * layer 4 => positive z
+ * layer 5 => negative z
+ */
+
 const faceSize = 128;
 const faceCanvases = [
     { faceColor: '#F00', textColor: '#0FF', text: '+X' },

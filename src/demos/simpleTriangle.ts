@@ -65,11 +65,9 @@ export class SimpleTriangle extends Base{
         //#endregion
         SimpleTriangle.isInited = true;
     }
-    static update() {
-       
-    }
 
-    static draw() {
+
+    static draw(dt:number) {
         if(!SimpleTriangle.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
@@ -98,9 +96,6 @@ export class SimpleTriangle extends Base{
 
         const commandBuffer = encoder.finish();
         SimpleTriangle.device!.queue.submit([commandBuffer]);
-    }
-    static destory() {
-
     }
 }
 

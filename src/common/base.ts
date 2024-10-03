@@ -34,8 +34,8 @@ export class Base {
 
         //#endregion
     }
-    public static update() { }
-    public static draw() { }
+    public static update(dt:number) { }
+    public static draw(dt:number) { }
     public static destory() { }
 
     private static createDom(canvasId:string, parentDom:HTMLDivElement|null = null):HTMLCanvasElement | null{

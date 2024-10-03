@@ -11,17 +11,17 @@ export class Application {
             demo.initialize(GPUContext.device);
         }
     }
-    static update() {
+    static update(dt:number) {
         for (let demo of demos) {
             // console.log(`${demo.name} updated`)
-            demo.update();
+            demo.update(dt);
         }
     }
 
-    static draw() {
+    static draw(dt:number) {
         for (let demo of demos) {
             // console.log(`${demo.name} drawed`)
-            demo.draw();
+            demo.draw(dt);
         }
 
     }

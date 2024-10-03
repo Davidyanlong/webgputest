@@ -118,11 +118,8 @@ export class TextureFSampler extends Base{
           }
 
     }
-    static update() {
-       
-    }
 
-    static draw() {
+    static draw(dt:number) {
         if(!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.

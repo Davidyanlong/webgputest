@@ -70,7 +70,7 @@ export class SimpleCompute extends Base {
             e.stopPropagation();
 
             SimpleCompute.setData([Math.round(Math.random()*100), Math.round(Math.random()*100), Math.round(Math.random()*100)])
-            SimpleCompute.update();
+            SimpleCompute.update(0);
             SimpleCompute.getBufferData().then((data)=>{
                 console.log(data);
                 resultSpan.innerHTML = `input: ${data?.input} <br/>result: ${data?.result}`
@@ -80,7 +80,7 @@ export class SimpleCompute extends Base {
         SimpleCompute.isInited = true;
 
     }
-    static update() {
+    static update(dt:number) {
         if (!SimpleCompute.isInited) return;
         if(SimpleCompute.isComputed) return;
         //#region compute encode
@@ -107,8 +107,6 @@ export class SimpleCompute extends Base {
         SimpleCompute.isComputed =true;
     }
 
-    static draw() { }
-    static destory() { }
 
     static setData(arr:number[]){
         SimpleCompute.input = new Float32Array(arr);

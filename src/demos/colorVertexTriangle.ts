@@ -55,11 +55,8 @@ export class ColorVertexTriangle  extends Base{
         //#endregion
         ColorVertexTriangle.isInited = true;
     }
-    static update() {
-       
-    }
 
-    static draw() {
+    static draw(dt:number) {
         if(!ColorVertexTriangle.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
@@ -81,9 +78,6 @@ export class ColorVertexTriangle  extends Base{
 
         const commandBuffer = encoder.finish();
         ColorVertexTriangle.device!.queue.submit([commandBuffer]);
-    }
-    static destory() {
-
     }
 }
 

@@ -152,12 +152,8 @@ export class StorageBufferTriangles extends Base{
         StorageBufferTriangles.isInited = true;
     }
 
-    static update() {
-        if (!StorageBufferTriangles.isInited) return;
 
-    }
-
-    static draw() {
+    static draw(dt:number) {
         if (!StorageBufferTriangles.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
@@ -190,9 +186,6 @@ export class StorageBufferTriangles extends Base{
 
         const commandBuffer = encoder.finish();
         StorageBufferTriangles.device!.queue.submit([commandBuffer]);
-    }
-    static destory() {
-
     }
 
 }

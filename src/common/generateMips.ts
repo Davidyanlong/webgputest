@@ -71,12 +71,18 @@ export class GenerateMips {
           device.queue.submit([commandBuffer]);
     }
 
-   
-    public static createTextureFromSource(device:GPUDevice, source:ImageBitmap|HTMLCanvasElement, options:textureParams = {}) {
-        const texture = device.createTexture({
+    private static getSourceSize(source:ImageBitmap|HTMLCanvasElement|HTMLVideoElement) {
+      return [
+        (source as HTMLVideoElement).videoWidth || source.width,
+        (source as HTMLVideoElement).videoHeight || source.height,
+      ];
+    }
+    public static createTextureFromSource(device:GPUDevice, source:ImageBitmap|HTMLCanvasElement|HTMLVideoElement, options:textureParams = {}) {
+      const size = this.getSourceSize(source);  
+      const texture = device.createTexture({
           format: 'rgba8unorm',
-          mipLevelCount: options.mips ? this.numMipLevels(source.width, source.height) : 1,
-          size: [source.width, source.height],
+          mipLevelCount: options.mips ? this.numMipLevels(...size) : 1,
+          size,
           usage: GPUTextureUsage.TEXTURE_BINDING |
                  GPUTextureUsage.COPY_DST |
                  GPUTextureUsage.RENDER_ATTACHMENT,
@@ -96,11 +102,11 @@ export class GenerateMips {
         return 1 + Math.log2(maxSize) | 0;
     };
 
-    private static copySourceToTexture(device:GPUDevice, texture:GPUTexture, source:ImageBitmap|HTMLCanvasElement, {flipY}:{flipY?:boolean} = {}) {
+    public static copySourceToTexture(device:GPUDevice, texture:GPUTexture, source:ImageBitmap|HTMLCanvasElement|HTMLVideoElement, {flipY}:{flipY?:boolean} = {}) {
         device.queue.copyExternalImageToTexture(
           { source, flipY, },
           { texture },
-          { width: source.width, height: source.height },
+         this.getSourceSize(source),
         );
     
         if (texture.mipLevelCount > 1) {

@@ -13,6 +13,7 @@ import  { TextureMipMap } from './texturemipmap'
 import  { TextureImage } from './textureImage';
 import  { TextureImageMipmap } from './textureImageMipmap';
 import { TextureCanvasMipmap } from "./textureCanvasMipmap";
+import { TextureVideoMipmap } from "./textureVideoMipmap";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -29,5 +30,6 @@ export const demos = [
     TextureMipMap,
     TextureImage,
     TextureImageMipmap,
-    TextureCanvasMipmap
+    TextureCanvasMipmap,
+    TextureVideoMipmap
 ]

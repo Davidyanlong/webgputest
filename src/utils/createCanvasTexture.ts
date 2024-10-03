@@ -29,17 +29,5 @@ export class CanvasAnimationTexture {
         }
         this.ctx.restore();
     }
-    
-   static copySourceToTexture(device:GPUDevice, texture:GPUTexture, source:HTMLCanvasElement, {flipY}:Record<string,any> = {}) {
-    device.queue.copyExternalImageToTexture(
-      { source, flipY, },
-      { texture },
-      { width: source.width, height: source.height },
-    );
-
-    if (texture.mipLevelCount > 1) {
-        GenerateMips.generateMips(device, texture);
-    }
-  }
 
 }

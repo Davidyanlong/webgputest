@@ -2,22 +2,22 @@ import { Base } from "../common/base"
 import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?raw'
 import { GenerateMips } from "../common/generateMips"
 import { mat4 } from "wgpu-matrix"
-import { CanvasAnimationTexture } from "../utils/createCanvasTexture"
+import { startPlayingAndWaitForVideo } from "../utils/video"
 
 /**
  * 渲染基本流程
  * 简单的三角形
  */
-export class TextureCanvasMipmap extends Base {
+export class TextureVideoMipmap extends Base {
     private static objectInfos:objectInfoInterface[] = []
     private static texNdx = 0;
     private static viewProjectionMatrix:Float32Array
-    private static canvasAnimationTexture:CanvasAnimationTexture
     private static texture:GPUTexture
+    private static video:HTMLVideoElement
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
-        super.initCanvas('textureCanvasMipmap')
+        super.initCanvas('textureVideoMipmap')
 
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
@@ -46,7 +46,11 @@ export class TextureCanvasMipmap extends Base {
         const textures = await this.initTexture()
 
         this.context.canvas.addEventListener('click', () => {
-            this.texNdx = (this.texNdx + 1) % textures.length;
+            if (this.video.paused) {
+                this.video.play();
+              } else {
+                this.video.pause();
+              }
         });
 
 
@@ -83,15 +87,20 @@ export class TextureCanvasMipmap extends Base {
 
     private static async initTexture() {
 
-        this.canvasAnimationTexture = new CanvasAnimationTexture()
-        this.canvasAnimationTexture.initialize();
-        this.canvasAnimationTexture.update2DCanvas(0);
+        const video = this.video = document.createElement('video');
+        video.muted = true;
+        video.loop = true;
+        video.preload = 'auto';
+        video.src = './videos/Golden_retriever_swimming_the_doggy_paddle-360-no-audio.webm'; 
 
-        this.texture = GenerateMips.createTextureFromSource(this.device, this.canvasAnimationTexture.ctx.canvas, {mips: true})
+        await startPlayingAndWaitForVideo(video);
 
-        const textures = await Promise.all([
+        
+        this.texture = GenerateMips.createTextureFromSource(this.device, video, {mips: true})
+
+        const textures = [
             this.texture
-        ]);
+        ];
 
         // offsets to the various uniform values in float32 indices
         const kMatrixOffset = 0;
@@ -140,8 +149,7 @@ export class TextureCanvasMipmap extends Base {
     }
     static update(dt:number){
         if(!this.isInited) return;
-        this.canvasAnimationTexture.update2DCanvas(dt);
-        GenerateMips.copySourceToTexture(this.device, this.texture,   this.canvasAnimationTexture.ctx.canvas);
+        GenerateMips.copySourceToTexture(this.device, this.texture,   this.video);
     }
 
     static draw(dt:number) {

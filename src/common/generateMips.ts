@@ -1,5 +1,5 @@
-import shadercode from './shaders/generatemips.wgsl?raw'
-import { loadImageBitmap } from './utils/res';
+import shadercode from '../shaders/generatemips.wgsl?raw'
+import { loadImageBitmap } from '../utils/res';
 export class GenerateMips {
     private static module: GPUShaderModule
     private static sampler: GPUSampler

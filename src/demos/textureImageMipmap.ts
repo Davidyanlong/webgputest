@@ -1,7 +1,6 @@
 import { Base } from "./base"
 import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?raw'
-import { loadImageBitmap } from "../utils/res"
-import { GenerateMips } from "../generateMips"
+import { GenerateMips } from "../common/generateMips"
 import { mat4 } from "wgpu-matrix"
 
 /**
@@ -9,7 +8,6 @@ import { mat4 } from "wgpu-matrix"
  * 简单的三角形
  */
 export class TextureImageMipmap extends Base {
-    private static bindGroups: GPUBindGroup[] = []
     private static objectInfos:objectInfoInterface[] = []
     private static texNdx = 0;
     private static viewProjectionMatrix:Float32Array

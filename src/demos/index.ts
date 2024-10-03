@@ -18,6 +18,7 @@ import { TextureVideo } from "./textureVideo";
 import { CubeTexture } from "./cubeTexture";
 import { StorageTexture } from "./storageTexture";
 import { MSAATriangle } from './msaaTriangle'
+import {ConstantShaderTriangle} from './constantShaderTriangle '
 
 // 保证案例的输出顺序
 export const demos = [
@@ -39,5 +40,6 @@ export const demos = [
     TextureVideo,
     CubeTexture,
     StorageTexture,
-    MSAATriangle
+    MSAATriangle,
+    ConstantShaderTriangle
 ]

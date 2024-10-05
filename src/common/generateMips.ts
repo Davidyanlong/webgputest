@@ -118,10 +118,10 @@ export class GenerateMips {
     return 1 + Math.log2(maxSize) | 0;
   };
 
-  public static copySourceToTexture(device: GPUDevice, texture: GPUTexture, source: sourceType, { flipY }: { flipY?: boolean } = {}) {
+  public static copySourceToTexture(device: GPUDevice, texture: GPUTexture, source: sourceType, { flipY,  premultipliedAlpha }: textureParams = {}) {
     device.queue.copyExternalImageToTexture(
       { source, flipY, },
-      { texture },
+      { texture, premultipliedAlpha },
       this.getSourceSize(source),
     );
 
@@ -129,7 +129,7 @@ export class GenerateMips {
       this.generateMips(device, texture);
     }
   }
-  public static copySourcesToTexture(device: GPUDevice, texture: GPUTexture, sources: sourceType[], { flipY }: { flipY?: boolean } = {}) {
+  public static copySourcesToTexture(device: GPUDevice, texture: GPUTexture, sources: sourceType[], { flipY }: textureParams = {}) {
     if (sources?.length > 0) {
       sources.forEach((source, layer) => {
         device.queue.copyExternalImageToTexture(
@@ -144,7 +144,7 @@ export class GenerateMips {
     }
 
   }
-  public static createTextureFromSources(device:GPUDevice, sources:sourceType[], options:{ flipY?: boolean, mips?:boolean }= {}) {
+  public static createTextureFromSources(device:GPUDevice, sources:sourceType[], options: textureParams = {}) {
     // Assume are sources all the same size so just use the first one for width and height
     const source = sources[0];
     const texture = device.createTexture({
@@ -163,6 +163,7 @@ export class GenerateMips {
 interface textureParams {
   mips?: boolean
   flipY?: boolean
+  premultipliedAlpha?:boolean
 }
 
 type sourceType = ImageBitmap | HTMLCanvasElement | HTMLVideoElement

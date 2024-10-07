@@ -1,5 +1,6 @@
 
 import { SimpleTriangle } from "./simpleTriangle";
+import { ComputeDynamicOffsets } from "./computeDynamicOffsets";
 import { SimpleCompute } from './simpleCompute';
 import { ColorVertexTriangle } from './colorVertexTriangle'
 import { Checkerboard } from './checkerboard';
@@ -21,9 +22,11 @@ import { MSAATriangle } from './msaaTriangle'
 import { ConstantShaderTriangle } from './constantShaderTriangle '
 import { Blend } from "./blend";
 
+
 // 保证案例的输出顺序
 export const demos = [
     SimpleTriangle,
+    ComputeDynamicOffsets,
     SimpleCompute,
     ColorVertexTriangle,
     Checkerboard,
@@ -43,5 +46,6 @@ export const demos = [
     StorageTexture,
     MSAATriangle,
     ConstantShaderTriangle,
-    Blend
+    Blend,
+
 ]

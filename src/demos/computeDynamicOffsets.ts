@@ -84,7 +84,7 @@ export class ComputeDynamicOffsets extends Base {
         // buffer to use for the computation
         this.bindGroup = device.createBindGroup({
             label: 'bindGroup for work buffer',
-            layout: this.pipeline.getBindGroupLayout(0),
+            layout: bindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.workBuffer, size: 256 } },
                 { binding: 1, resource: { buffer: this.workBuffer, size: 256 } },

@@ -19,8 +19,9 @@ import { TextureVideo } from "./textureVideo";
 import { CubeTexture } from "./cubeTexture";
 import { StorageTexture } from "./storageTexture";
 import { MSAATriangle } from './msaaTriangle'
-import { ConstantShaderTriangle } from './constantShaderTriangle '
+import { ConstantShaderTriangle } from './constantShaderTriangle'
 import { Blend } from "./blend";
+import { TimestampQuery } from './timestampQuery'
 
 
 // 保证案例的输出顺序
@@ -47,5 +48,5 @@ export const demos = [
     MSAATriangle,
     ConstantShaderTriangle,
     Blend,
-
+    TimestampQuery,
 ]

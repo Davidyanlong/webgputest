@@ -4,10 +4,15 @@ export class GPUContext {
   static async initialize() {
     const adapter = this.adapter =  await navigator.gpu!.requestAdapter() as GPUAdapter;
     const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
+    const canTimestamp = adapter.features.has('timestamp-query');
+
+    const requiredFeatures = [
+      ...(hasBGRA8unormStorage? ['bgra8unorm-storage']: []),
+      ...(canTimestamp ? ['timestamp-query'] : []),
+    ] as Iterable<GPUFeatureName>;
+
     GPUContext.device = await adapter!.requestDevice({
-      requiredFeatures: hasBGRA8unormStorage
-      ? ['bgra8unorm-storage']
-      : [],
+      requiredFeatures,
       requiredLimits:{
         minUniformBufferOffsetAlignment: 256,
         maxBufferSize: adapter!.limits.maxBufferSize,

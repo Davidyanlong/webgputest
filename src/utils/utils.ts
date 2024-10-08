@@ -1,5 +1,5 @@
 
-
+export const degToRad = (d: number) => d * Math.PI / 180;
 export function rand(min?: number, max?: number) {
   if (min === undefined) {
     min = 0;

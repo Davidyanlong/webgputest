@@ -22,6 +22,7 @@ import { MSAATriangle } from './msaaTriangle'
 import { ConstantShaderTriangle } from './constantShaderTriangle'
 import { Blend } from "./blend";
 import { TimestampQuery } from './timestampQuery'
+import { Transform } from './transform'
 
 
 // 保证案例的输出顺序
@@ -49,4 +50,5 @@ export const demos = [
     ConstantShaderTriangle,
     Blend,
     TimestampQuery,
+    Transform
 ]

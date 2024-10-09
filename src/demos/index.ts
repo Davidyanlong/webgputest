@@ -23,6 +23,7 @@ import { ConstantShaderTriangle } from './constantShaderTriangle'
 import { Blend } from "./blend";
 import { TimestampQuery } from './timestampQuery'
 import { Transform } from './transform'
+import { Orthogonal } from './orthogonal'
 
 
 // 保证案例的输出顺序
@@ -50,5 +51,6 @@ export const demos = [
     ConstantShaderTriangle,
     Blend,
     TimestampQuery,
-    Transform
+    Transform,
+    Orthogonal
 ]

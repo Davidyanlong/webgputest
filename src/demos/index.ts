@@ -24,7 +24,7 @@ import { Blend } from "./blend";
 import { TimestampQuery } from './timestampQuery'
 import { Transform } from './transform'
 import { Orthogonal } from './orthogonal'
-
+import { Perspective } from './perspective'
 
 // 保证案例的输出顺序
 export const demos = [
@@ -52,5 +52,6 @@ export const demos = [
     Blend,
     TimestampQuery,
     Transform,
-    Orthogonal
+    Orthogonal,
+    Perspective
 ]

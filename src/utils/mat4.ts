@@ -4,6 +4,35 @@ export const mat4 = {
         return mat4.ortho(0, width, height, 0, depth, -depth, dst);
     },
 
+    perspective(fieldOfViewYInRadians: number, aspect: number, zNear: number, zFar: number, dst: Float32Array) {
+        dst = dst || new Float32Array(16);
+
+        const f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewYInRadians);
+        const rangeInv = 1 / (zNear - zFar);
+
+        dst[0] = f / aspect;
+        dst[1] = 0;
+        dst[2] = 0;
+        dst[3] = 0;
+
+        dst[4] = 0;
+        dst[5] = f;
+        dst[6] = 0;
+        dst[7] = 0;
+
+        dst[8] = 0;
+        dst[9] = 0;
+        dst[10] = zFar * rangeInv;
+        dst[11] = -1;
+
+        dst[12] = 0;
+        dst[13] = 0;
+        dst[14] = zNear * zFar * rangeInv;
+        dst[15] = 0;
+
+        return dst;
+    },
+
     ortho(left: number, right: number, bottom: number, top: number, near: number, far: number, dst?: Float32Array) {
         dst = dst || new Float32Array(16);
 

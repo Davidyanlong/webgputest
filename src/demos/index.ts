@@ -25,6 +25,7 @@ import { TimestampQuery } from './timestampQuery'
 import { Transform } from './transform'
 import { Orthogonal } from './orthogonal'
 import { Perspective } from './perspective'
+import { Camera } from "./camera";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -53,5 +54,6 @@ export const demos = [
     TimestampQuery,
     Transform,
     Orthogonal,
-    Perspective
+    Perspective,
+    Camera
 ]

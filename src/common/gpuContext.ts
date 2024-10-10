@@ -38,6 +38,6 @@ export class GPUContext {
   update(){}
 }
 
-function fail(arg0: string) {
+function fail(_arg0?: string) {
   throw new Error("Function not implemented.");
 }

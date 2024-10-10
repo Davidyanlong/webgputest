@@ -27,6 +27,7 @@ import { Orthogonal } from './orthogonal'
 import { Perspective } from './perspective'
 import { Camera } from "./camera";
 import { LookAt } from "./lookAt";
+import { DirectionalLight } from "./directionalLight";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -57,5 +58,6 @@ export const demos = [
     Orthogonal,
     Perspective,
     Camera,
-    LookAt
+    LookAt,
+    DirectionalLight
 ]

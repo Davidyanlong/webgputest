@@ -288,6 +288,21 @@ export const mat4 = {
         return dst;
     },
 
+    aim(eye:vec3Type, target:vec3Type, up:vec3Type, dst?:Float32Array) {
+        dst = dst || new Float32Array(16);
+     
+        const zAxis = vec3.normalize(vec3.subtract(target, eye));
+        const xAxis = vec3.normalize(vec3.cross(up, zAxis));
+        const yAxis = vec3.normalize(vec3.cross(zAxis, xAxis));
+     
+        dst[ 0] = xAxis[0];  dst[ 1] = xAxis[1];  dst[ 2] = xAxis[2];  dst[ 3] = 0;
+        dst[ 4] = yAxis[0];  dst[ 5] = yAxis[1];  dst[ 6] = yAxis[2];  dst[ 7] = 0;
+        dst[ 8] = zAxis[0];  dst[ 9] = zAxis[1];  dst[10] = zAxis[2];  dst[11] = 0;
+        dst[12] = eye[0];    dst[13] = eye[1];    dst[14] = eye[2];    dst[15] = 1;
+     
+        return dst;
+      },
+
     cameraAim(eye: vec3Type, target: vec3Type, up: vec3Type, dst?: Float32Array) {
         dst = dst || new Float32Array(16);
 

@@ -26,6 +26,7 @@ import { Transform } from './transform'
 import { Orthogonal } from './orthogonal'
 import { Perspective } from './perspective'
 import { Camera } from "./camera";
+import { LookAt } from "./lookAt";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -55,5 +56,6 @@ export const demos = [
     Transform,
     Orthogonal,
     Perspective,
-    Camera
+    Camera,
+    LookAt
 ]

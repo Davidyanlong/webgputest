@@ -144,6 +144,27 @@ export class Orthogonal extends Base {
         this.isInited = true;
     }
 
+    static update(): void {
+        if (!this.isInited) return;
+        const canvas = this.context.canvas as HTMLCanvasElement;
+        mat4.ortho(
+            0,                   // left
+            canvas.clientWidth,  // right
+            canvas.clientHeight, // bottom
+            0,                   // top
+            400,                 // near
+            -400,                // far
+            this.matrixValue,         // dst
+        );
+        mat4.translate(this.matrixValue, this.settings.translation, this.matrixValue);
+        mat4.rotateX(this.matrixValue, this.settings.rotation[0], this.matrixValue);
+        mat4.rotateY(this.matrixValue, this.settings.rotation[1], this.matrixValue);
+        mat4.rotateZ(this.matrixValue, this.settings.rotation[2], this.matrixValue);
+        mat4.scale(this.matrixValue, this.settings.scale, this.matrixValue);
+
+        // upload the uniform values to the uniform buffer
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
+    }
 
     static draw() {
         if (!this.isInited) return;
@@ -181,24 +202,6 @@ export class Orthogonal extends Base {
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer)
-        const canvas = this.context.canvas as HTMLCanvasElement;
-        mat4.ortho(
-            0,                   // left
-            canvas.clientWidth,  // right
-            canvas.clientHeight, // bottom
-            0,                   // top
-            400,                 // near
-            -400,                // far
-            this.matrixValue,         // dst
-        );
-        mat4.translate(this.matrixValue, this.settings.translation, this.matrixValue);
-        mat4.rotateX(this.matrixValue, this.settings.rotation[0], this.matrixValue);
-        mat4.rotateY(this.matrixValue, this.settings.rotation[1], this.matrixValue);
-        mat4.rotateZ(this.matrixValue, this.settings.rotation[2], this.matrixValue);
-        mat4.scale(this.matrixValue, this.settings.scale, this.matrixValue);
-
-        // upload the uniform values to the uniform buffer
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
 
         pass.setBindGroup(0, this.bindGroup);
         pass.draw(this.numVertices);
@@ -207,6 +210,7 @@ export class Orthogonal extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+    
     private static initGUI() {
 
         // @ts-ignore

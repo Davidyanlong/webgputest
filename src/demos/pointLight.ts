@@ -5,7 +5,6 @@ import { createFVerticesNormal } from "../utils/createF"
 import { mat3 } from "../utils/mat3"
 import { mat4 } from "../utils/mat4"
 import { degToRad } from "../utils/utils"
-import { vec3 } from "../utils/vec3"
 
 /**
  * 点光源
@@ -20,11 +19,11 @@ export class PointLight extends Base {
     private static bindGroup: GPUBindGroup
     private static worldViewProjectionValue: Float32Array
     private static normalMatrixValue: Float32Array
-    private static worldValue:Float32Array
+    private static worldValue: Float32Array
     private static colorValue: Float32Array
     private static lightWorldPositionValue: Float32Array
-    private static viewWorldPositionValue:Float32Array
-    private static shininessValue:Float32Array
+    private static viewWorldPositionValue: Float32Array
+    private static shininessValue: Float32Array
     private static uniformBuffer: GPUBuffer
     private static uniformValues: Float32Array
 
@@ -157,7 +156,7 @@ export class PointLight extends Base {
 
 
         this.settings = {
-           rotation: degToRad(0),
+            rotation: degToRad(0),
             shininess: 30,
         };
 
@@ -165,7 +164,45 @@ export class PointLight extends Base {
 
         this.isInited = true;
     }
+    static update(): void {
+        if (!this.isInited) return;
+        const canvas = this.context.canvas as HTMLCanvasElement;
+        const aspect = canvas.clientWidth / canvas.clientHeight
+        // 透视投影
+        const projection = mat4.perspective(
+            degToRad(60),
+            aspect,
+            1,      // zNear
+            2000,   // zFar
+        );
 
+        const eye = new Float32Array([100, 150, 200]);
+        const target = new Float32Array([0, 35, 0]);
+        const up = new Float32Array([0, 1, 0]);
+
+        // Compute a view matrix
+        const viewMatrix = mat4.lookAt(eye, target, up);
+
+        // Combine the view and projection matrixes
+        const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
+
+        // Compute a world matrix
+        const world = mat4.rotationY(this.settings.rotation, this.worldValue);
+
+        // Combine the viewProjection and world matrices
+        mat4.multiply(viewProjectionMatrix, world, this.worldViewProjectionValue);
+
+        // Inverse and transpose it into the worldInverseTranspose value
+        mat3.fromMat4(mat4.transpose(mat4.inverse(world)), this.normalMatrixValue);
+
+        this.colorValue.set([0.2, 1, 0.2, 1]);  // green
+        this.lightWorldPositionValue.set([-10, 30, 100]);
+        this.viewWorldPositionValue.set(eye);
+        this.shininessValue[0] = this.settings.shininess;
+
+        // upload the uniform values to the uniform buffer
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
+    }
 
     static draw() {
         if (!this.isInited) return;
@@ -204,42 +241,7 @@ export class PointLight extends Base {
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer)
 
-        const canvas = this.context.canvas as HTMLCanvasElement;
-        const aspect = canvas.clientWidth / canvas.clientHeight
-        // 透视投影
-        const projection = mat4.perspective(
-            degToRad(60),
-            aspect,
-            1,      // zNear
-            2000,   // zFar
-        );
 
-        const eye = new Float32Array([100, 150, 200]);
-        const target = new Float32Array([0, 35, 0]);
-        const up = new Float32Array([0, 1, 0]);
-
-        // Compute a view matrix
-        const viewMatrix = mat4.lookAt(eye, target, up);
-
-        // Combine the view and projection matrixes
-        const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
-
-        // Compute a world matrix
-        const world = mat4.rotationY(this.settings.rotation, this.worldValue);
-
-        // Combine the viewProjection and world matrices
-        mat4.multiply(viewProjectionMatrix, world, this.worldViewProjectionValue);
-
-        // Inverse and transpose it into the worldInverseTranspose value
-        mat3.fromMat4(mat4.transpose(mat4.inverse(world)), this.normalMatrixValue);
-
-        this.colorValue.set([0.2, 1, 0.2, 1]);  // green
-        this.lightWorldPositionValue.set([-10, 30, 100]);
-        this.viewWorldPositionValue.set(eye);
-        this.shininessValue[0] = this.settings.shininess;
-
-        // upload the uniform values to the uniform buffer
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
 
         pass.setBindGroup(0, this.bindGroup);
         pass.draw(this.numVertices);

@@ -21,8 +21,6 @@ export class TextureFSampler extends Base{
 
         this.initGUI();
 
-        //#endregion
-
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
@@ -67,6 +65,39 @@ export class TextureFSampler extends Base{
         this.isInited = true;
     }
 
+    static draw() {
+        if(!this.isInited) return;
+        // Get the current texture from the canvas context and
+        // set it as the texture to render to.
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
+
+        colorAttach && (colorAttach.view =
+            this.context!.getCurrentTexture().createView());
+
+
+        // make a command encoder to start encoding commands
+        const encoder = this.device!.createCommandEncoder({
+            label: 'our encoder'
+        });
+
+        // make a render pass encoder to encode render specific commands
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
+
+        const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
+                (this.settings.addressModeV === 'repeat' ? 2 : 0) +
+                (this.settings.magFilter === 'linear' ? 4 : 0);
+
+        const bindGroup = this.bindGroups[ndx];
+
+
+        pass.setBindGroup(0, bindGroup);
+        pass.draw(6);  // call our vertex shader 3 times
+        pass.end();
+
+        const commandBuffer = encoder.finish();
+        this.device!.queue.submit([commandBuffer]);
+    }
     private static initTexture(){
         const kTextureWidth = 5;
         const kTextureHeight = 7;
@@ -118,41 +149,7 @@ export class TextureFSampler extends Base{
           }
 
     }
-
-    static draw() {
-        if(!this.isInited) return;
-        // Get the current texture from the canvas context and
-        // set it as the texture to render to.
-        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
-
-        colorAttach && (colorAttach.view =
-            this.context!.getCurrentTexture().createView());
-
-
-        // make a command encoder to start encoding commands
-        const encoder = this.device!.createCommandEncoder({
-            label: 'our encoder'
-        });
-
-        // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
-        pass.setPipeline(this.pipeline as GPURenderPipeline);
-
-        const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
-                (this.settings.addressModeV === 'repeat' ? 2 : 0) +
-                (this.settings.magFilter === 'linear' ? 4 : 0);
-
-        const bindGroup = this.bindGroups[ndx];
-
-
-        pass.setBindGroup(0, bindGroup);
-        pass.draw(6);  // call our vertex shader 3 times
-        pass.end();
-
-        const commandBuffer = encoder.finish();
-        this.device!.queue.submit([commandBuffer]);
-    }
-    static initGUI(){
+    private static initGUI(){
        
 
         const addressOptions = ['repeat', 'clamp-to-edge'];

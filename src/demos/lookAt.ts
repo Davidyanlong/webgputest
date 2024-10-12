@@ -149,6 +149,63 @@ export class LookAt extends Base {
         this.isInited = true;
     }
 
+    static update(): void {
+        if (!this.isInited) return;
+        // update target X,Z based on angle
+        this.settings.target[0] = Math.cos(this.settings.targetAngle) * this.radius;
+        this.settings.target[2] = Math.sin(this.settings.targetAngle) * this.radius;
+
+        const canvas = this.context.canvas as HTMLCanvasElement;
+        const aspect = canvas.clientWidth / canvas.clientHeight
+        // 透视投影
+        const projection = mat4.perspective(
+            degToRad(60), // fieldOfView,
+            aspect,
+            1,      // zNear
+            2000,   // zFar
+        );
+        const eye = new Float32Array([-500, 300, -500]);
+        const target = new Float32Array([0, -100, 0]);
+        const up = new Float32Array([0, 1, 0]);
+
+        // Compute a view matrix
+        const viewMatrix = mat4.lookAt(eye, target, up);
+
+        // combine the view and projection matrixes
+        const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
+        this.objectInfos.forEach(({
+            matrixValue,
+            uniformBuffer,
+            uniformValues,
+        }, i) => {
+
+            const deep = 5;
+            const across = 5;
+
+            if (i < 25) {
+                // compute grid positions
+                const gridX = i % across;
+                const gridZ = i / across | 0;
+
+                // compute 0 to 1 positions
+                const u = gridX / (across - 1);
+                const v = gridZ / (deep - 1);
+
+                // center and spread out
+                const x = (u - 0.5) * across * 150;
+                const z = (v - 0.5) * deep * 150;
+
+                // aim this F from it's position toward the target F
+                const aimMatrix = mat4.aim(new Float32Array([x, 0, z]), this.settings.target, up);
+                mat4.multiply(viewProjectionMatrix, aimMatrix, matrixValue);
+            } else {
+                mat4.translate(viewProjectionMatrix, this.settings.target, matrixValue);
+            }
+
+            // upload the uniform values to the uniform buffer
+            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+        });
+    }
 
     static draw() {
         if (!this.isInited) return;
@@ -187,62 +244,9 @@ export class LookAt extends Base {
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer)
 
-
-           // update target X,Z based on angle
-        this.settings.target[0] = Math.cos(this.settings.targetAngle) * this.radius;
-        this.settings.target[2] = Math.sin(this.settings.targetAngle) * this.radius;
-
-        const canvas = this.context.canvas as HTMLCanvasElement;
-        const aspect = canvas.clientWidth / canvas.clientHeight
-        // 透视投影
-        const projection = mat4.perspective(
-            degToRad(60), // fieldOfView,
-            aspect,
-            1,      // zNear
-            2000,   // zFar
-        );
-        const eye = new Float32Array([-500, 300, -500]);
-        const target = new Float32Array([0, -100, 0]);
-        const up = new Float32Array([0, 1, 0]);
-
-        // Compute a view matrix
-        const viewMatrix = mat4.lookAt(eye, target, up);
-
-        // combine the view and projection matrixes
-        const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
         this.objectInfos.forEach(({
-            matrixValue,
-            uniformBuffer,
-            uniformValues,
             bindGroup,
-        }, i) => {
-           
-            const deep = 5;
-            const across = 5;
-
-            if (i < 25) {
-                // compute grid positions
-                const gridX = i % across;
-                const gridZ = i / across | 0;
-         
-                // compute 0 to 1 positions
-                const u = gridX / (across - 1);
-                const v = gridZ / (deep - 1);
-         
-                // center and spread out
-                const x = (u - 0.5) * across * 150;
-                const z = (v - 0.5) * deep * 150;
-         
-                // aim this F from it's position toward the target F
-                const aimMatrix = mat4.aim(new Float32Array([x, 0, z]), this.settings.target, up);
-                mat4.multiply(viewProjectionMatrix, aimMatrix, matrixValue);
-              } else {
-                mat4.translate(viewProjectionMatrix, this.settings.target, matrixValue);
-              }
-
-            // upload the uniform values to the uniform buffer
-            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
-
+        }) => {
             pass.setBindGroup(0, bindGroup);
             pass.draw(this.numVertices);
         });
@@ -251,6 +255,7 @@ export class LookAt extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+    
     private static initGUI() {
 
         // @ts-ignore

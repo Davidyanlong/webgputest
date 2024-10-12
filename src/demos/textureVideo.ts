@@ -136,6 +136,27 @@ export class TextureVideo extends Base {
         return textures;
     }
 
+    static update(): void {
+        if (!this.isInited) return;
+
+        // 数据更新
+        this.objectInfos.forEach(({matrix, uniformBuffer, uniformValues}, i) => {
+              const xSpacing = 1.2;
+              const ySpacing = 0.5;
+              const zDepth = 1;
+    
+              const x = i % 2 - .5;
+              const y = i < 2 ? 1 : -1;
+        
+              mat4.translate(this.viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
+              mat4.rotateX(matrix, 0.25 * Math.PI * Math.sign(y), matrix);
+              mat4.scale(matrix, [1, -1, 1], matrix);
+              mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
+            // copy the values from JavaScript to the GPU
+            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+          });
+    }
+
     static draw() {
         if (!this.isInited) return;
 
@@ -159,7 +180,8 @@ export class TextureVideo extends Base {
         // 获取视频贴图
         const texture = this.device.importExternalTexture({source: this.video});
 
-        this.objectInfos.forEach(({sampler, matrix, uniformBuffer, uniformValues}, i) => {
+        // 管线录制
+        this.objectInfos.forEach(({sampler,  uniformBuffer}, i) => {
             // 动态bindGroup 
             const bindGroup = this.device.createBindGroup({
                 layout: this.pipeline.getBindGroupLayout(0),
@@ -169,22 +191,6 @@ export class TextureVideo extends Base {
                   { binding: 2, resource: { buffer: uniformBuffer }},
                 ],
               });
-         
-      
-              const xSpacing = 1.2;
-              const ySpacing = 0.5;
-              const zDepth = 1;
-        
-              const x = i % 2 - .5;
-              const y = i < 2 ? 1 : -1;
-        
-              mat4.translate(this.viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
-              mat4.rotateX(matrix, 0.25 * Math.PI * Math.sign(y), matrix);
-              mat4.scale(matrix, [1, -1, 1], matrix);
-              mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
-            // copy the values from JavaScript to the GPU
-            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
-      
             pass.setBindGroup(0, bindGroup);
             pass.draw(6);  // call our vertex shader 6 times
           });

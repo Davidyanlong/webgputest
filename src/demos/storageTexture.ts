@@ -5,19 +5,19 @@ import { GPUContext } from "../common/gpuContext";
  * 渲染基本流程
  * 简单的三角形
  */
-export class StorageTexture extends Base{
+export class StorageTexture extends Base {
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
-        const context = super.initCanvas('storageTexture',true)
-        const hasBGRA8unormStorage =  GPUContext.adapter!.features.has('bgra8unorm-storage');
-        this.presentationFormat =hasBGRA8unormStorage? navigator.gpu.getPreferredCanvasFormat():'rgba8unorm';
+        const context = super.initCanvas('storageTexture', true)
+        const hasBGRA8unormStorage = GPUContext.adapter!.features.has('bgra8unorm-storage');
+        this.presentationFormat = hasBGRA8unormStorage ? navigator.gpu.getPreferredCanvasFormat() : 'rgba8unorm';
         context.configure({
             device,
             format: this.presentationFormat,
             usage: GPUTextureUsage.TEXTURE_BINDING |
-                   GPUTextureUsage.STORAGE_BINDING,
-          });
+                GPUTextureUsage.STORAGE_BINDING,
+        });
         this.context = context;
 
         //#region  shaderModule
@@ -55,19 +55,19 @@ export class StorageTexture extends Base{
 
         //#endregion
 
-       
+
         this.isInited = true;
     }
 
     static draw() {
-        if(!this.isInited) return;
+        if (!this.isInited) return;
         const texture = this.context.getCurrentTexture();
 
         const bindGroup = this.device.createBindGroup({
-        layout: this.pipeline.getBindGroupLayout(0),
-        entries: [
-            { binding: 0, resource: texture.createView() },
-        ],
+            layout: this.pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: texture.createView() },
+            ],
         });
 
         const encoder = this.device.createCommandEncoder({ label: 'our encoder' });

@@ -12,8 +12,6 @@ export class MSAATriangle extends Base {
         await super.initialize(device)
         super.initCanvas('msaaTriangle')
 
-        //#endregion
-
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded red triangle shaders',

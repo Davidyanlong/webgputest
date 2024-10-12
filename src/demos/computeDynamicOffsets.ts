@@ -101,7 +101,7 @@ export class ComputeDynamicOffsets extends Base {
             e.stopPropagation()
             this.setData(this.getRandomNums())
             this.setData(this.getRandomNums(), 64)
-            this.update(0);
+            this.update();
             this.getBufferData().then((data) => {
                 console.log(data);
                 resultSpan.innerHTML = `input:<br/> a: ${data?.input.slice(0, this.numLen)} <br/> b: ${data?.input.slice(64, 64 + this.numLen)} <br/>result: ${data?.result.slice(128, 128+this.numLen)}`
@@ -111,14 +111,8 @@ export class ComputeDynamicOffsets extends Base {
         this.isInited = true;
 
     }
-    private static getRandomNums(){
-        let arr = []
-        for(let i=0;i<this.numLen;i++){
-            arr.push(Math.round(Math.random() * 100))
-        }
-        return arr
-    }
-    static update(dt: number) {
+
+    static update() {
         if (!this.isInited) return;
         if (this.isComputed) return;
         //#region compute encode
@@ -164,5 +158,13 @@ export class ComputeDynamicOffsets extends Base {
             input: this.input,
             result
         }
+    }
+
+    private static getRandomNums(){
+        let arr = []
+        for(let i=0;i<this.numLen;i++){
+            arr.push(Math.round(Math.random() * 100))
+        }
+        return arr
     }
 }

@@ -173,6 +173,7 @@ export class SpotLight extends Base {
 
         this.isInited = true;
     }
+    
     static update(): void {
         if (!this.isInited) return;
         const canvas = this.context.canvas as HTMLCanvasElement;
@@ -233,7 +234,6 @@ export class SpotLight extends Base {
 
     }
 
-
     static draw() {
         if (!this.isInited) return;
         // Get the current texture from the canvas context and
@@ -276,6 +276,7 @@ export class SpotLight extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+
     private static initGUI() {
 
         // @ts-ignore

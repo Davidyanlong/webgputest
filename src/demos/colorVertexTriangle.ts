@@ -11,8 +11,6 @@ export class ColorVertexTriangle  extends Base{
         await super.initialize(device);
         super.initCanvas('colorVertexTriangle')
 
-        ColorVertexTriangle.device = device;
-
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded rgb  triangle shaders',
@@ -22,7 +20,7 @@ export class ColorVertexTriangle  extends Base{
         //#endregion
 
         //#region  render pipeline
-        ColorVertexTriangle.pipeline = device.createRenderPipeline({
+        this.pipeline = device.createRenderPipeline({
             label: 'our hardcoded red triangle pipeline',
             layout: 'auto',
             vertex: {
@@ -41,7 +39,7 @@ export class ColorVertexTriangle  extends Base{
         //#endregion
 
         //#region  渲染队列参数
-        ColorVertexTriangle.renderPassDescriptor = {
+        this.renderPassDescriptor = {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
@@ -53,31 +51,31 @@ export class ColorVertexTriangle  extends Base{
             ],
         };
         //#endregion
-        ColorVertexTriangle.isInited = true;
+        this.isInited = true;
     }
 
-    static draw(dt:number) {
-        if(!ColorVertexTriangle.isInited) return;
+    static draw() {
+        if(!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
-        let colorAttach = Array.from(ColorVertexTriangle.renderPassDescriptor.colorAttachments)[0];
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
 
         colorAttach && (colorAttach.view =
-            ColorVertexTriangle.context!.getCurrentTexture().createView());
+            this.context!.getCurrentTexture().createView());
 
         // make a command encoder to start encoding commands
-        const encoder = ColorVertexTriangle.device!.createCommandEncoder({
+        const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'
         });
 
         // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(ColorVertexTriangle.renderPassDescriptor);
-        pass.setPipeline(ColorVertexTriangle.pipeline as GPURenderPipeline);
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();
 
         const commandBuffer = encoder.finish();
-        ColorVertexTriangle.device!.queue.submit([commandBuffer]);
+        this.device!.queue.submit([commandBuffer]);
     }
 }
 

@@ -1,17 +1,18 @@
 import { Base } from "../common/base";
 import shadercode from '../shaders/multUniformTriangle/mult_uniform_triangle.wgsl?raw'
+import { rand } from "../utils/utils";
 
 /**
  * 渲染基本流程
  * bindGroup / uniform 学习
  */
-export class MultUniformTriangle extends Base{
+export class MultUniformTriangle extends Base {
     private static kColorOffset = 0;
     private static kScaleOffset = 0;
     private static kOffsetOffset = 4;
 
     private static kNumObjects = 100;
-    private static objectInfos:ObjectInfo[] = [];
+    private static objectInfos: ObjectInfo[] = [];
 
 
     static async initialize(device: GPUDevice) {
@@ -25,11 +26,10 @@ export class MultUniformTriangle extends Base{
             label: 'triangle shaders with uniforms',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
-        MultUniformTriangle.pipeline = device.createRenderPipeline({
+        this.pipeline = device.createRenderPipeline({
             label: 'multiple uniform buffe',
             layout: 'auto',
             vertex: {
@@ -55,54 +55,54 @@ export class MultUniformTriangle extends Base{
             2 * 4;  // padding
         const uniformBufferSize =
             2 * 4;  // scale is 2 32bit floats (4bytes each)
-        
-        
 
 
-        for (let i = 0; i < MultUniformTriangle.kNumObjects; ++i) {
+
+
+        for (let i = 0; i < this.kNumObjects; ++i) {
             const staticUniformBuffer = device.createBuffer({
-              label: `static uniforms for obj: ${i}`,
-              size: staticUniformBufferSize,
-              usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                label: `static uniforms for obj: ${i}`,
+                size: staticUniformBufferSize,
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
-        
+
             // These are only set once so set them now
             {
-              const uniformValues = new Float32Array(staticUniformBufferSize / 4);
-              uniformValues.set([rand(), rand(), rand(), 1], MultUniformTriangle.kColorOffset);        // set the color
-              uniformValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], MultUniformTriangle.kOffsetOffset);      // set the offset
-        
-              // copy these values to the GPU
-              device.queue.writeBuffer(staticUniformBuffer, 0, uniformValues);
+                const uniformValues = new Float32Array(staticUniformBufferSize / 4);
+                uniformValues.set([rand(), rand(), rand(), 1], this.kColorOffset);        // set the color
+                uniformValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], this.kOffsetOffset);      // set the offset
+
+                // copy these values to the GPU
+                device.queue.writeBuffer(staticUniformBuffer, 0, uniformValues);
             }
-        
+
             // create a typedarray to hold the values for the uniforms in JavaScript
             const uniformValues = new Float32Array(uniformBufferSize / 4);
             const uniformBuffer = device.createBuffer({
-              label: `changing uniforms for obj: ${i}`,
-              size: uniformBufferSize,
-              usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                label: `changing uniforms for obj: ${i}`,
+                size: uniformBufferSize,
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
-        
+
             const bindGroup = device.createBindGroup({
-              label: `bind group for obj: ${i}`,
-              layout: MultUniformTriangle.pipeline.getBindGroupLayout(0),
-              entries: [
-                { binding: 0, resource: { buffer: staticUniformBuffer }},
-                { binding: 1, resource: { buffer: uniformBuffer }},
-              ],
+                label: `bind group for obj: ${i}`,
+                layout: this.pipeline.getBindGroupLayout(0),
+                entries: [
+                    { binding: 0, resource: { buffer: staticUniformBuffer } },
+                    { binding: 1, resource: { buffer: uniformBuffer } },
+                ],
             });
-        
-            MultUniformTriangle.objectInfos.push({
-              scale: rand(0.2, 0.5),
-              uniformBuffer,
-              uniformValues,
-              bindGroup,
+
+            this.objectInfos.push({
+                scale: rand(0.2, 0.5),
+                uniformBuffer,
+                uniformValues,
+                bindGroup,
             });
         }
 
         //#region  渲染队列参数
-        MultUniformTriangle.renderPassDescriptor = {
+        this.renderPassDescriptor = {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
@@ -114,58 +114,52 @@ export class MultUniformTriangle extends Base{
             ],
         };
         //#endregion
-        MultUniformTriangle.isInited = true;
+        this.isInited = true;
     }
 
-    static draw(dt:number) {
-        if (!MultUniformTriangle.isInited) return;
+    static update(): void {
+        if (!this.isInited) return;
+        // 更新渲染数据
+        for (const { scale, uniformBuffer, uniformValues } of this.objectInfos) {
+            uniformValues.set([scale / this.aspect, scale], this.kScaleOffset); // set the scale
+            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+        }
+    }
+
+    static draw() {
+        if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
-        let colorAttach = Array.from(MultUniformTriangle.renderPassDescriptor.colorAttachments)[0];
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
 
         colorAttach && (colorAttach.view =
-            MultUniformTriangle.context!.getCurrentTexture().createView());
+            this.context!.getCurrentTexture().createView());
 
         // make a command encoder to start encoding commands
-        const encoder = MultUniformTriangle.device!.createCommandEncoder({
+        const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'
         });
 
         // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(MultUniformTriangle.renderPassDescriptor);
-        pass.setPipeline(MultUniformTriangle.pipeline as GPURenderPipeline);
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
         // 渲染多个对象
-        for (const {scale, bindGroup, uniformBuffer, uniformValues} of MultUniformTriangle.objectInfos) {
-            uniformValues.set([scale / MultUniformTriangle.aspect, scale], MultUniformTriangle.kScaleOffset); // set the scale
-            MultUniformTriangle.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
-      
+        for (const { bindGroup } of this.objectInfos) {
             pass.setBindGroup(0, bindGroup);
             pass.draw(3);  // call our vertex shader 3 times
-      
-          }
+
+        }
         pass.end();
 
         const commandBuffer = encoder.finish();
-        MultUniformTriangle.device!.queue.submit([commandBuffer]);
+        this.device!.queue.submit([commandBuffer]);
     }
-
 
 }
 
-function rand(min?: number, max?: number) {
-    if (min === undefined) {
-        min = 0;
-        max = 1;
-    } else if (max === undefined) {
-        max = min;
-        min = 0;
-    }
-    return min + Math.random() * (max - min);
-};
-
 interface ObjectInfo {
     scale: number,
-    uniformBuffer:GPUBuffer,
-    uniformValues:Float32Array,
-    bindGroup:GPUBindGroup,
+    uniformBuffer: GPUBuffer,
+    uniformValues: Float32Array,
+    bindGroup: GPUBindGroup,
 }

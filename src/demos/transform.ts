@@ -147,7 +147,22 @@ export class Transform extends Base {
 
         this.isInited = true;
     }
+    static update(): void {
+        if (!this.isInited) return;
+        let canvas = this.context.canvas;
+        // Set the uniform values in our JavaScript side Float32Array
+        this.resolutionValue.set([canvas.width, canvas.height]);
+        this.translationValue.set(this.settings.translation);
+        this.rotationValue.set([
+            Math.cos(this.settings.rotation),
+            Math.sin(this.settings.rotation),
+        ]);
+        this.scaleValue.set(this.settings.scale);
 
+        // upload the uniform values to the uniform buffer
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
+
+    }
 
     static draw() {
         if (!this.isInited) return;
@@ -169,20 +184,6 @@ export class Transform extends Base {
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer)
         pass.setIndexBuffer(this.indexBuffer, 'uint32');
-
-        let canvas = this.context.canvas;
-        // Set the uniform values in our JavaScript side Float32Array
-        this.resolutionValue.set([canvas.width, canvas.height]);
-        this.translationValue.set(this.settings.translation);
-        this.rotationValue.set([
-            Math.cos(this.settings.rotation),
-            Math.sin(this.settings.rotation),
-        ]);
-        this.scaleValue.set(this.settings.scale);
-
-        // upload the uniform values to the uniform buffer
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
-
         pass.setBindGroup(0, this.bindGroup);
         pass.drawIndexed(this.numVertices);
         pass.end();

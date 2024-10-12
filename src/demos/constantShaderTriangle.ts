@@ -12,8 +12,6 @@ export class ConstantShaderTriangle extends Base{
         await super.initialize(device)
         super.initCanvas('constantShaderTriangle')
 
-        //#endregion
-
         //#region  shaderModule
         const vsModule = device.createShaderModule({
             label: 'our hardcoded constant triangle vs shaders',
@@ -33,6 +31,7 @@ export class ConstantShaderTriangle extends Base{
             layout: 'auto',
             vertex: {
                 module:vsModule,
+                 // 传递常量
                 constants: {
                     red: 1,
                     green: 1,
@@ -44,6 +43,7 @@ export class ConstantShaderTriangle extends Base{
                 targets: [
                     { format: this.presentationFormat },
                 ],
+                // 传递常量
                 constants: {
                     red: 1,
                     green: 0.5,
@@ -69,7 +69,6 @@ export class ConstantShaderTriangle extends Base{
         //#endregion
         this.isInited = true;
     }
-
 
     static draw() {
         if(!this.isInited) return;

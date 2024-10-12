@@ -5,14 +5,14 @@ import shadercode from '../shaders/simpleTriangle/simple_triangle.wgsl?raw'
  * 渲染基本流程
  * 简单的三角形
  */
-export class SimpleTriangle extends Base{
+export class SimpleTriangle extends Base {
     private static context2: GPUCanvasContext
 
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('simpleTriangle1')
-        this.context2 = super.initCanvas('simpleTriangle2',true)
+        this.context2 = super.initCanvas('simpleTriangle2', true)
 
         //#endregion
 
@@ -25,7 +25,7 @@ export class SimpleTriangle extends Base{
         //#endregion
 
         //#region  render pipeline
-        SimpleTriangle.pipeline = device.createRenderPipeline({
+        this.pipeline = device.createRenderPipeline({
             label: 'our hardcoded red triangle pipeline',
             layout: 'auto',
             vertex: {
@@ -45,7 +45,7 @@ export class SimpleTriangle extends Base{
         //#endregion
 
         //#region  渲染队列参数
-        SimpleTriangle.renderPassDescriptor = {
+        this.renderPassDescriptor = {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
@@ -63,39 +63,38 @@ export class SimpleTriangle extends Base{
             ],
         };
         //#endregion
-        SimpleTriangle.isInited = true;
+        this.isInited = true;
     }
 
-
     static draw() {
-        if(!SimpleTriangle.isInited) return;
+        if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
-        let colorAttach = Array.from(SimpleTriangle.renderPassDescriptor.colorAttachments)[0];
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
 
         colorAttach && (colorAttach.view =
-            SimpleTriangle.context!.getCurrentTexture().createView());
+            this.context!.getCurrentTexture().createView());
 
 
         let colorAttach2 = Array.from(
-            SimpleTriangle.renderPassDescriptor.colorAttachments)[1];
+            this.renderPassDescriptor.colorAttachments)[1];
 
         colorAttach2 && (colorAttach2.view =
-            SimpleTriangle.context2!.getCurrentTexture().createView());
+            this.context2!.getCurrentTexture().createView());
 
         // make a command encoder to start encoding commands
-        const encoder = SimpleTriangle.device!.createCommandEncoder({
+        const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'
         });
 
         // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(SimpleTriangle.renderPassDescriptor);
-        pass.setPipeline(SimpleTriangle.pipeline as GPURenderPipeline);
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();
 
         const commandBuffer = encoder.finish();
-        SimpleTriangle.device!.queue.submit([commandBuffer]);
+        this.device!.queue.submit([commandBuffer]);
     }
 }
 

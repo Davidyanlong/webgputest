@@ -127,7 +127,49 @@ export class CubeTexture extends Base {
         //#endregion
         this.isInited = true;
     }
+    
+    static update(dt: number): void {
+        if (!this.isInited) return;
+        const time = dt * 0.001
+        mat4.multiply(this.projectionMatrix, this.viewMatrix, this.matrixValue);
+        mat4.rotateX(this.matrixValue, time, this.matrixValue);
+        mat4.rotateY(this.matrixValue, time, this.matrixValue);
+        mat4.rotateZ(this.matrixValue, time, this.matrixValue);
+    
+        // upload the uniform values to the uniform buffer
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
 
+    }
+
+    static draw() {
+        if (!this.isInited) return;
+        // Get the current texture from the canvas context and
+        // set it as the texture to render to.
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
+
+        colorAttach && (colorAttach.view =
+            this.context!.getCurrentTexture().createView());
+
+
+        // make a command encoder to start encoding commands
+        const encoder = this.device!.createCommandEncoder({
+            label: 'our encoder'
+        });
+
+        // make a render pass encoder to encode render specific commands
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
+        pass.setVertexBuffer(0, this.vertexBuffer);
+        pass.setIndexBuffer(this.indexBuffer,'uint16');
+    
+        pass.setBindGroup(0, this.bindGroup);
+        pass.drawIndexed(this.numVertices);
+        pass.end();
+
+        const commandBuffer = encoder.finish();
+        this.device!.queue.submit([commandBuffer]);
+    }
+    
     private static async initTexture() {
         const texture = await GenerateMips.createTextureFromSources(
             this.device, faceCanvases, { mips: true, flipY: false });
@@ -178,44 +220,6 @@ export class CubeTexture extends Base {
             usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
         });
         this.device.queue.writeBuffer(this.indexBuffer, 0, indexData);
-    }
-
-    static draw(dt: number) {
-        if (!this.isInited) return;
-        // Get the current texture from the canvas context and
-        // set it as the texture to render to.
-        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
-
-        colorAttach && (colorAttach.view =
-            this.context!.getCurrentTexture().createView());
-
-
-        // make a command encoder to start encoding commands
-        const encoder = this.device!.createCommandEncoder({
-            label: 'our encoder'
-        });
-
-        // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
-        pass.setPipeline(this.pipeline as GPURenderPipeline);
-        pass.setVertexBuffer(0, this.vertexBuffer);
-        pass.setIndexBuffer(this.indexBuffer,'uint16');
-        const time = dt * 0.001
-        mat4.multiply(this.projectionMatrix, this.viewMatrix, this.matrixValue);
-        mat4.rotateX(this.matrixValue, time, this.matrixValue);
-        mat4.rotateY(this.matrixValue, time, this.matrixValue);
-        mat4.rotateZ(this.matrixValue, time, this.matrixValue);
-    
-        // upload the uniform values to the uniform buffer
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
-
-
-        pass.setBindGroup(0, this.bindGroup);
-        pass.drawIndexed(this.numVertices);
-        pass.end();
-
-        const commandBuffer = encoder.finish();
-        this.device!.queue.submit([commandBuffer]);
     }
 }
 

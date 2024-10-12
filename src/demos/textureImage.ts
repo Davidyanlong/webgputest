@@ -22,8 +22,6 @@ export class TextureImage extends Base {
 
         this.initGUI();
 
-        //#endregion
-
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
@@ -68,6 +66,36 @@ export class TextureImage extends Base {
         this.isInited = true;
     }
 
+    static draw() {
+        if (!this.isInited) return;
+        // Get the current texture from the canvas context and
+        // set it as the texture to render to.
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
+
+        colorAttach && (colorAttach.view =
+            this.context!.getCurrentTexture().createView());
+
+            const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
+            (this.settings.addressModeV === 'repeat' ? 2 : 0) +
+            (this.settings.magFilter === 'linear' ? 4 : 0);
+            const bindGroup = this.bindGroups[ndx];
+
+
+        // make a command encoder to start encoding commands
+        const encoder = this.device!.createCommandEncoder({
+            label: 'our encoder'
+        });
+
+        // make a render pass encoder to encode render specific commands
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.draw(6);  // call our vertex shader 3 times
+        pass.end();
+
+        const commandBuffer = encoder.finish();
+        this.device!.queue.submit([commandBuffer]);
+    }
     private static async initTexture() {
         const url = './f-texture.png';
         const source = await loadImageBitmap(url);
@@ -105,37 +133,7 @@ export class TextureImage extends Base {
         }
     }
 
-    static draw(dt:number) {
-        if (!this.isInited) return;
-        // Get the current texture from the canvas context and
-        // set it as the texture to render to.
-        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
-
-        colorAttach && (colorAttach.view =
-            this.context!.getCurrentTexture().createView());
-
-            const ndx = (this.settings.addressModeU === 'repeat' ? 1 : 0) +
-            (this.settings.addressModeV === 'repeat' ? 2 : 0) +
-            (this.settings.magFilter === 'linear' ? 4 : 0);
-            const bindGroup = this.bindGroups[ndx];
-
-
-        // make a command encoder to start encoding commands
-        const encoder = this.device!.createCommandEncoder({
-            label: 'our encoder'
-        });
-
-        // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
-        pass.setPipeline(this.pipeline as GPURenderPipeline);
-        pass.setBindGroup(0, bindGroup);
-        pass.draw(6);  // call our vertex shader 3 times
-        pass.end();
-
-        const commandBuffer = encoder.finish();
-        this.device!.queue.submit([commandBuffer]);
-    }
-    static initGUI(){
+    private static initGUI(){
         const addressOptions = ['repeat', 'clamp-to-edge'];
         const filterOptions = ['nearest', 'linear'];
         // @ts-ignore

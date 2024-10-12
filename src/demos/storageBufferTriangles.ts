@@ -9,7 +9,7 @@ import { rand } from "../utils/utils";
  *  uniform max 64k
  *  storage max 128M
  */
-export class StorageBufferTriangles extends Base{
+export class StorageBufferTriangles extends Base {
     private static kColorOffset = 0;
     private static kScaleOffset = 0;
     private static kOffsetOffset = 4;
@@ -20,7 +20,7 @@ export class StorageBufferTriangles extends Base{
     private static storageValues: Float32Array;
     private static bindGroup: GPUBindGroup;
     private static storageBuffer: GPUBuffer;
-    private static numVertices:number;
+    private static numVertices: number;
 
 
     static async initialize(device: GPUDevice) {
@@ -36,7 +36,7 @@ export class StorageBufferTriangles extends Base{
         //#endregion
 
         //#region  render pipeline
-        StorageBufferTriangles.pipeline = device.createRenderPipeline({
+        this.pipeline = device.createRenderPipeline({
             label: 'split storage buffer pipeline',
             layout: 'auto',
             vertex: {
@@ -59,11 +59,11 @@ export class StorageBufferTriangles extends Base{
             2 * 4 + // offset is 2 32bit floats (4bytes each)
             2 * 4;  // padding
 
-        const changingUnitSize = StorageBufferTriangles.changingUnitSize =
+        const changingUnitSize = this.changingUnitSize =
             2 * 4;  // scale is 2 32bit floats (4bytes each)
 
-        const staticStorageBufferSize = staticStorageUnitSize * StorageBufferTriangles.kNumObjects;
-        const storageBufferSize = changingUnitSize * StorageBufferTriangles.kNumObjects;
+        const staticStorageBufferSize = staticStorageUnitSize * this.kNumObjects;
+        const storageBufferSize = changingUnitSize * this.kNumObjects;
 
         const staticStorageBuffer = device.createBuffer({
             label: 'static storage for objects',
@@ -71,24 +71,24 @@ export class StorageBufferTriangles extends Base{
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
         });
 
-        StorageBufferTriangles.storageBuffer = device.createBuffer({
+        this.storageBuffer = device.createBuffer({
             label: 'changing storage for objects',
             size: storageBufferSize,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
         });
 
         const staticStorageValues = new Float32Array(staticStorageBufferSize / 4);
-        StorageBufferTriangles.storageValues = new Float32Array(storageBufferSize / 4);
+        this.storageValues = new Float32Array(storageBufferSize / 4);
 
 
-        for (let i = 0; i < StorageBufferTriangles.kNumObjects; ++i) {
+        for (let i = 0; i < this.kNumObjects; ++i) {
             const staticOffset = i * (staticStorageUnitSize / 4);
 
             // These are only set once so set them now
-            staticStorageValues.set([rand(), rand(), rand(), 1], staticOffset + StorageBufferTriangles.kColorOffset);        // set the color
-            staticStorageValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], staticOffset + StorageBufferTriangles.kOffsetOffset);      // set the offset
+            staticStorageValues.set([rand(), rand(), rand(), 1], staticOffset + this.kColorOffset);        // set the color
+            staticStorageValues.set([rand(-0.9, 0.9), rand(-0.9, 0.9)], staticOffset + this.kOffsetOffset);      // set the offset
 
-            StorageBufferTriangles.objectInfos.push({
+            this.objectInfos.push({
                 scale: rand(0.2, 0.5),
             });
         }
@@ -101,7 +101,7 @@ export class StorageBufferTriangles extends Base{
             innerRadius: 0.25,
         });
 
-        StorageBufferTriangles.numVertices = numVertices
+        this.numVertices = numVertices
         const vertexStorageBuffer = device.createBuffer({
             label: 'storage buffer vertices',
             size: vertexData.byteLength,
@@ -110,9 +110,9 @@ export class StorageBufferTriangles extends Base{
         device.queue.writeBuffer(vertexStorageBuffer, 0, vertexData);
 
 
-        StorageBufferTriangles.bindGroup = device.createBindGroup({
+        this.bindGroup = device.createBindGroup({
             label: 'bind group for objects',
-            layout: StorageBufferTriangles.pipeline.getBindGroupLayout(0),
+            layout: this.pipeline.getBindGroupLayout(0),
             entries: [
                 {
                     binding: 0,
@@ -123,13 +123,13 @@ export class StorageBufferTriangles extends Base{
                 {
                     binding: 1,
                     resource: {
-                        buffer: StorageBufferTriangles.storageBuffer
+                        buffer: this.storageBuffer
                     }
                 },
-                { 
-                    binding: 2, 
-                    resource: { 
-                        buffer: vertexStorageBuffer 
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: vertexStorageBuffer
                     }
                 },
             ],
@@ -137,7 +137,7 @@ export class StorageBufferTriangles extends Base{
 
 
         //#region  渲染队列参数
-        StorageBufferTriangles.renderPassDescriptor = {
+        this.renderPassDescriptor = {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
@@ -149,43 +149,46 @@ export class StorageBufferTriangles extends Base{
             ],
         };
         //#endregion
-        StorageBufferTriangles.isInited = true;
+        this.isInited = true;
     }
-
-
-    static draw(dt:number) {
-        if (!StorageBufferTriangles.isInited) return;
-        // Get the current texture from the canvas context and
-        // set it as the texture to render to.
-        let colorAttach = Array.from(StorageBufferTriangles.renderPassDescriptor.colorAttachments)[0];
-
-        colorAttach && (colorAttach.view =
-            StorageBufferTriangles.context!.getCurrentTexture().createView());
-
-        // make a command encoder to start encoding commands
-        const encoder = StorageBufferTriangles.device!.createCommandEncoder({
-            label: 'our encoder'
-        });
-
-        // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(StorageBufferTriangles.renderPassDescriptor);
-        pass.setPipeline(StorageBufferTriangles.pipeline as GPURenderPipeline);
+    static update(): void {
+        if (!this.isInited) return;
         // 渲染多个对象
         let ndx = 0;
-        for (const { scale } of StorageBufferTriangles.objectInfos) {
-            const offset = ndx * (StorageBufferTriangles.changingUnitSize / 4);
-            StorageBufferTriangles.storageValues.set([scale / StorageBufferTriangles.aspect, scale], offset + StorageBufferTriangles.kScaleOffset); // set the scale
+        for (const { scale } of this.objectInfos) {
+            const offset = ndx * (this.changingUnitSize / 4);
+            this.storageValues.set([scale / this.aspect, scale], offset + this.kScaleOffset); // set the scale
 
             ndx++;
         }
         // upload all scales at once
-        StorageBufferTriangles.device.queue.writeBuffer(StorageBufferTriangles.storageBuffer, 0, StorageBufferTriangles.storageValues);
-        pass.setBindGroup(0, StorageBufferTriangles.bindGroup);
-        pass.draw(StorageBufferTriangles.numVertices, StorageBufferTriangles.kNumObjects);  // call our vertex shader 3 times
+        this.device.queue.writeBuffer(this.storageBuffer, 0, this.storageValues);
+    }
+
+    static draw() {
+        if (!this.isInited) return;
+        // Get the current texture from the canvas context and
+        // set it as the texture to render to.
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
+
+        colorAttach && (colorAttach.view =
+            this.context!.getCurrentTexture().createView());
+
+        // make a command encoder to start encoding commands
+        const encoder = this.device!.createCommandEncoder({
+            label: 'our encoder'
+        });
+
+        // make a render pass encoder to encode render specific commands
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
+
+        pass.setBindGroup(0, this.bindGroup);
+        pass.draw(this.numVertices, this.kNumObjects);  // call our vertex shader 3 times
         pass.end();
 
         const commandBuffer = encoder.finish();
-        StorageBufferTriangles.device!.queue.submit([commandBuffer]);
+        this.device!.queue.submit([commandBuffer]);
     }
 
 }

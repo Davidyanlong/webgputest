@@ -59,7 +59,7 @@ export class Checkerboard extends Base {
         this.isInited = true;
     }
 
-    static draw(dt:number) {
+    static draw() {
         if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.

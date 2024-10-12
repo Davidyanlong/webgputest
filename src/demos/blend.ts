@@ -8,7 +8,6 @@ import { hsl, hsla } from "../utils/color"
  * Blend 理解
  */
 export class Blend extends Base {
-    private static bindGroup: GPUBindGroup
     private static bindGroupLayout: GPUBindGroupLayout
     private static settings: Record<string, any>
     private static dstPipeline: GPURenderPipeline
@@ -115,6 +114,86 @@ export class Blend extends Base {
         this.isInited = true;
     }
 
+    static update() {
+        if (!this.isInited) return;
+        makeBlendComponentValid(color);
+        makeBlendComponentValid(alpha);
+
+        this.pipeline = this.device.createRenderPipeline({
+            label: 'hardcoded textured quad pipeline',
+            layout: this.pipelineLayout,
+            vertex: {
+                module: this.module,
+            },
+            fragment: {
+                module: this.module,
+                targets: [
+                    {
+                        format: this.presentationFormat,
+                        blend: {
+                            color,
+                            alpha,
+                        },
+                    },
+                ],
+            },
+        });
+
+        const {
+            srcTexture,
+            dstTexture,
+        } = this.textureSets[this.settings.textureSet];
+        this.context.configure({
+            device: this.device,
+            format: this.presentationFormat,
+            alphaMode: this.settings.alphaMode,
+        });
+
+        const canvasTexture = this.context.getCurrentTexture();
+
+        updateUniforms(this.device, this.srcUniform, canvasTexture, srcTexture);
+        updateUniforms(this.device, this.dstUniform, canvasTexture, dstTexture);
+
+
+    }
+
+    static draw() {
+        if (!this.isInited) return;
+
+        const {
+            srcBindGroup,
+            dstBindGroup,
+        } = this.textureSets[this.settings.textureSet];
+
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
+
+        colorAttach && (colorAttach.view =
+            this.context!.getCurrentTexture().createView());
+
+
+        // make a command encoder to start encoding commands
+        const encoder = this.device!.createCommandEncoder({
+            label: 'our encoder'
+        });
+
+        // make a render pass encoder to encode render specific commands
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        // draw dst
+        pass.setPipeline(this.dstPipeline);
+        pass.setBindGroup(0, dstBindGroup);
+        pass.draw(6);  // call our vertex shader 6 times
+
+        // draw src
+        pass.setPipeline(this.pipeline as GPURenderPipeline);
+        pass.setBindGroup(0, srcBindGroup);
+        pass.setBlendConstant([...constant.color, constant.alpha]);
+        pass.draw(6);  // call our vertex shader 6 times
+
+        pass.end();
+
+        const commandBuffer = encoder.finish();
+        this.device!.queue.submit([commandBuffer]);
+    }
     private static initTexture() {
         const size = 300;
         const srcCanvas = createSourceImage(size);
@@ -299,88 +378,6 @@ export class Blend extends Base {
                 Object.assign(alpha, preset.alpha || preset.color);
                 gui.updateDisplay();
             });
-    }
-
-    static update(dt: number) {
-        if (!this.isInited) return;
-        makeBlendComponentValid(color);
-        makeBlendComponentValid(alpha);
-
-        this.pipeline = this.device.createRenderPipeline({
-            label: 'hardcoded textured quad pipeline',
-            layout: this.pipelineLayout,
-            vertex: {
-                module: this.module,
-            },
-            fragment: {
-                module: this.module,
-                targets: [
-                    {
-                        format: this.presentationFormat,
-                        blend: {
-                            color,
-                            alpha,
-                        },
-                    },
-                ],
-            },
-        });
-
-        const {
-            srcTexture,
-            dstTexture,
-        } = this.textureSets[this.settings.textureSet];
-        this.context.configure({
-            device: this.device,
-            format: this.presentationFormat,
-            alphaMode: this.settings.alphaMode,
-        });
-
-        const canvasTexture = this.context.getCurrentTexture();
-
-        updateUniforms(this.device, this.srcUniform, canvasTexture, srcTexture);
-        updateUniforms(this.device, this.dstUniform, canvasTexture, dstTexture);
-
-
-    }
-
-
-    static draw(dt: number) {
-        if (!this.isInited) return;
-
-        const {
-            srcBindGroup,
-            dstBindGroup,
-        } = this.textureSets[this.settings.textureSet];
-
-        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
-
-        colorAttach && (colorAttach.view =
-            this.context!.getCurrentTexture().createView());
-
-
-        // make a command encoder to start encoding commands
-        const encoder = this.device!.createCommandEncoder({
-            label: 'our encoder'
-        });
-
-        // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
-        // draw dst
-        pass.setPipeline(this.dstPipeline);
-        pass.setBindGroup(0, dstBindGroup);
-        pass.draw(6);  // call our vertex shader 6 times
-
-        // draw src
-        pass.setPipeline(this.pipeline as GPURenderPipeline);
-        pass.setBindGroup(0, srcBindGroup);
-        pass.setBlendConstant([...constant.color, constant.alpha]);
-        pass.draw(6);  // call our vertex shader 6 times
-
-        pass.end();
-
-        const commandBuffer = encoder.finish();
-        this.device!.queue.submit([commandBuffer]);
     }
 }
 

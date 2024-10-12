@@ -1,8 +1,9 @@
 import { Base } from "../common/base";
 import { GPUContext } from "../common/gpuContext";
 import shadercode from '../shaders/vertexBufferTriangles/vertex_buffer_triangles.wgsl?raw'
+import { createCircleVerticesColor } from "../utils/createCircleVertices";
 import { RollingAverage, TimingHelper } from "../utils/timeingHelper";
-import { euclideanModulo } from "../utils/utils";
+import { euclideanModulo, rand } from "../utils/utils";
 
 /**
  * 渲染基本流程
@@ -159,7 +160,7 @@ export class TimestampQuery extends Base {
         // a typed array we can use to update the changingStorageBuffer
         this.vertexValues = new Float32Array(changingVertexBufferSize / 4);
         // setup a storage buffer with vertex data
-        const { vertexData, numVertices } = this.createCircleVertices({
+        const { vertexData, numVertices } = createCircleVerticesColor({
             radius: 0.5,
             innerRadius: 0.25,
         });
@@ -197,14 +198,33 @@ export class TimestampQuery extends Base {
 
         this.isInited = true;
     }
-
-    static draw(dt: number) {
-       
+    static update(dt: number): void {
         let now = dt * 0.001;
         const deltaTime = now - this.then;
         this.then = now;
-        const startTime = performance.now();
+      
+        if (!this.isInited) return;
+          // 渲染多个对象
+          for (let ndx = 0; ndx < this.settings.numObjects; ++ndx) {
+            const { scale, offset, velocity } = this.objectInfos[ndx];
+            // -1.5 to 1.5
+            offset[0] = euclideanModulo(offset[0] + velocity[0] * deltaTime + 1.5, 3) - 1.5;
+            offset[1] = euclideanModulo(offset[1] + velocity[1] * deltaTime + 1.5, 3) - 1.5;
 
+            const off = ndx * (this.changingUnitSize / 4);
+            this.vertexValues.set(offset, off + this.kOffsetOffset);
+            this.vertexValues.set([scale / this.aspect, scale], off + this.kScaleOffset);
+        }
+        // upload all offsets and scales at once
+        this.device.queue.writeBuffer(
+            this.changingVertexBuffer, 0,
+            this.vertexValues, 0, this.settings.numObjects * this.changingUnitSize / 4);
+    }
+
+    static draw(dt: number) {
+        let now = dt * 0.001;
+        const deltaTime = now - this.then;
+        const startTime = performance.now();
         if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
@@ -224,25 +244,7 @@ export class TimestampQuery extends Base {
         
         pass.setVertexBuffer(0, this.vertexBuffer);
         pass.setVertexBuffer(1, this.staticVertexBuffer);
-        pass.setVertexBuffer(2, this.changingVertexBuffer);
-      
-        // 渲染多个对象
-        for (let ndx = 0; ndx < this.settings.numObjects; ++ndx) {
-            const { scale, offset, velocity } = this.objectInfos[ndx];
-            // -1.5 to 1.5
-            offset[0] = euclideanModulo(offset[0] + velocity[0] * deltaTime + 1.5, 3) - 1.5;
-            offset[1] = euclideanModulo(offset[1] + velocity[1] * deltaTime + 1.5, 3) - 1.5;
-
-            const off = ndx * (this.changingUnitSize / 4);
-            this.vertexValues.set(offset, off + this.kOffsetOffset);
-            this.vertexValues.set([scale / this.aspect, scale], off + this.kScaleOffset);
-        }
-        // upload all offsets and scales at once
-        this.device.queue.writeBuffer(
-            this.changingVertexBuffer, 0,
-            this.vertexValues, 0, this.settings.numObjects * this.changingUnitSize / 4);
-
-           
+        pass.setVertexBuffer(2, this.changingVertexBuffer);     
 
         pass.draw(this.numVertices, this.settings.numObjects);  // call our vertex shader 3 times
         pass.end();
@@ -263,66 +265,6 @@ export class TimestampQuery extends Base {
         this.stat();
     }
 
-    private static createCircleVertices({
-        radius = 1,
-        numSubdivisions = 24,
-        innerRadius = 0,
-        startAngle = 0,
-        endAngle = Math.PI * 2,
-    } = {}) {
-        // 2 triangles per subdivision, 3 verts per tri
-        const numVertices = numSubdivisions * 3 * 2;
-        // 2 32-bit values for position (xy) and 1 32-bit value for color (rgb_)
-        // The 32-bit color value will be written/read as 4 8-bit values
-        const vertexData = new Float32Array(numVertices * (2 + 1));
-        const colorData = new Uint8Array(vertexData.buffer);
-
-        let offset = 0;
-        let colorOffset = 8;
-        const addVertex = (x: number, y: number, r: number, g: number, b: number) => {
-            vertexData[offset++] = x;
-            vertexData[offset++] = y;
-            offset += 1;  // skip the color
-            colorData[colorOffset++] = r * 255;
-            colorData[colorOffset++] = g * 255;
-            colorData[colorOffset++] = b * 255;
-            colorOffset += 9;  // skip extra byte and the position
-        };
-
-        const innerColor: [number, number, number] = [1, 1, 1];
-        const outerColor: [number, number, number] = [0.1, 0.1, 0.1];
-
-        // 2 vertices per subdivision
-        //
-        // 0--1 4
-        // | / /|
-        // |/ / |
-        // 2 3--5
-        for (let i = 0; i < numSubdivisions; ++i) {
-            const angle1 = startAngle + (i + 0) * (endAngle - startAngle) / numSubdivisions;
-            const angle2 = startAngle + (i + 1) * (endAngle - startAngle) / numSubdivisions;
-
-            const c1 = Math.cos(angle1);
-            const s1 = Math.sin(angle1);
-            const c2 = Math.cos(angle2);
-            const s2 = Math.sin(angle2);
-
-            // first triangle
-            addVertex(c1 * radius, s1 * radius, ...outerColor);
-            addVertex(c2 * radius, s2 * radius, ...outerColor);
-            addVertex(c1 * innerRadius, s1 * innerRadius, ...innerColor);
-
-            // second triangle
-            addVertex(c1 * innerRadius, s1 * innerRadius, ...innerColor);
-            addVertex(c2 * radius, s2 * radius, ...outerColor);
-            addVertex(c2 * innerRadius, s2 * innerRadius, ...innerColor);
-        }
-
-        return {
-            vertexData,
-            numVertices,
-        };
-    }
     private static initGUI() {
 
         // @ts-ignore
@@ -362,16 +304,7 @@ export class TimestampQuery extends Base {
 
 }
 
-function rand(min?: number, max?: number) {
-    if (min === undefined) {
-        min = 0;
-        max = 1;
-      } else if (max === undefined) {
-        max = min;
-        min = 0;
-      }
-      return min + Math.random() * (max - min);
-};
+
 
 interface objectInfosType {
     scale: number

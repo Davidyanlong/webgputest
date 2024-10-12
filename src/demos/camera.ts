@@ -149,6 +149,52 @@ export class Camera extends Base {
         this.isInited = true;
     }
 
+    static update(): void {
+        if (!this.isInited) return;
+
+        const canvas = this.context.canvas as HTMLCanvasElement;
+        const aspect = canvas.clientWidth / canvas.clientHeight
+        // 透视投影
+        const projection = mat4.perspective(
+            this.settings.fieldOfView,
+            aspect,
+            1,      // zNear
+            2000,   // zFar
+        );
+        // Compute the position of the first F
+        const fPosition = new Float32Array([this.radius, 0, 0]);
+
+        // Use matrix math to compute a position on a circle where
+        // the camera is
+        const tempMatrix = mat4.rotationY(this.settings.cameraAngle);
+        mat4.translate(tempMatrix, [0, 0, this.radius * 1.5], tempMatrix);
+
+        // Get the camera's position from the matrix we computed
+        const eye = tempMatrix.slice(12, 15);
+
+        const up = new Float32Array([0, 1, 0]);
+
+        // Compute a view matrix
+        const viewMatrix = mat4.lookAt(eye, fPosition, up);
+
+        // combine the view and projection matrixes
+        const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
+        this.objectInfos.forEach(({
+            matrixValue,
+            uniformBuffer,
+            uniformValues,
+        }, i) => {
+            const angle = i / this.numFs * Math.PI * 2;
+            const x = Math.cos(angle) * this.radius;
+            const z = Math.sin(angle) * this.radius;
+
+            mat4.translate(viewProjectionMatrix, [x, 0, z], matrixValue);
+
+            // upload the uniform values to the uniform buffer
+            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+
+        });
+    }
 
     static draw() {
         if (!this.isInited) return;
@@ -186,48 +232,10 @@ export class Camera extends Base {
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer)
-        const canvas = this.context.canvas as HTMLCanvasElement;
-        const aspect = canvas.clientWidth / canvas.clientHeight
-        // 透视投影
-        const projection = mat4.perspective(
-            this.settings.fieldOfView,
-            aspect,
-            1,      // zNear
-            2000,   // zFar
-        );
-        // Compute the position of the first F
-        const fPosition = new Float32Array([this.radius, 0, 0]);
 
-        // Use matrix math to compute a position on a circle where
-        // the camera is
-        const tempMatrix = mat4.rotationY(this.settings.cameraAngle);
-        mat4.translate(tempMatrix, [0, 0, this.radius * 1.5], tempMatrix);
-
-        // Get the camera's position from the matrix we computed
-        const eye = tempMatrix.slice(12, 15);
-
-        const up = new Float32Array([0, 1, 0]);
-
-        // Compute a view matrix
-        const viewMatrix = mat4.lookAt(eye, fPosition, up);
-
-        // combine the view and projection matrixes
-        const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
         this.objectInfos.forEach(({
-            matrixValue,
-            uniformBuffer,
-            uniformValues,
             bindGroup,
-        }, i) => {
-            const angle = i / this.numFs * Math.PI * 2;
-            const x = Math.cos(angle) * this.radius;
-            const z = Math.sin(angle) * this.radius;
-
-            mat4.translate(viewProjectionMatrix, [x, 0, z], matrixValue);
-
-            // upload the uniform values to the uniform buffer
-            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
-
+        }) => {
             pass.setBindGroup(0, bindGroup);
             pass.draw(this.numVertices);
         });
@@ -236,6 +244,7 @@ export class Camera extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+    
     private static initGUI() {
 
         // @ts-ignore

@@ -8,18 +8,13 @@ import { mat4 } from "wgpu-matrix"
  * 简单的三角形
  */
 export class TextureImageMipmap extends Base {
-    private static objectInfos:objectInfoInterface[] = []
+    private static objectInfos: objectInfoInterface[] = []
     private static texNdx = 0;
-    private static viewProjectionMatrix:Float32Array
+    private static viewProjectionMatrix: Float32Array
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('textureImageMipmap')
-
-
-
-
-        //#endregion
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -71,8 +66,8 @@ export class TextureImageMipmap extends Base {
         const fov = 60 * Math.PI / 180;  // 60 degrees in radians
         const canvas = this.context.canvas as HTMLCanvasElement;
         const aspect = canvas.clientWidth / canvas.clientHeight;
-        const zNear  = 1;
-        const zFar   = 2000;
+        const zNear = 1;
+        const zFar = 2000;
         const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
 
         const cameraPosition = [0, 0, 2];
@@ -84,6 +79,61 @@ export class TextureImageMipmap extends Base {
         this.isInited = true;
     }
 
+
+
+    static update(): void {
+        if (!this.isInited) return;
+
+        // 数据更新
+        this.objectInfos.forEach(({ matrix, uniformBuffer, uniformValues }, i) => {
+
+            const xSpacing = 1.2;
+            const ySpacing = 0.7;
+            const zDepth = 50;
+
+            const x = i % 4 - 1.5;
+            const y = i < 4 ? 1 : -1;
+
+            mat4.translate(this.viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
+            mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
+            mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
+            mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
+
+            // copy the values from JavaScript to the GPU
+            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+
+        });
+    }
+
+    static draw() {
+        if (!this.isInited) return;
+
+        // Get the current texture from the canvas context and
+        // set it as the texture to render to.
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
+
+        colorAttach && (colorAttach.view =
+            this.context!.getCurrentTexture().createView());
+
+
+        // make a command encoder to start encoding commands
+        const encoder = this.device!.createCommandEncoder({
+            label: 'our encoder'
+        });
+
+        // make a render pass encoder to encode render specific commands
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
+        pass.setPipeline(this.pipeline as GPURenderPipeline)
+        this.objectInfos.forEach(({ bindGroups }) => {
+            const bindGroup = bindGroups[this.texNdx];
+            pass.setBindGroup(0, bindGroup);
+            pass.draw(6);  // call our vertex shader 6 times
+        });
+        pass.end();
+
+        const commandBuffer = encoder.finish();
+        this.device!.queue.submit([commandBuffer]);
+    }
     private static async initTexture() {
         const textures = await Promise.all([
             await GenerateMips.createTextureFromImage(this.device,
@@ -139,59 +189,13 @@ export class TextureImageMipmap extends Base {
         }
         return textures;
     }
-
-    static draw(dt:number) {
-        if (!this.isInited) return;
-
-        // Get the current texture from the canvas context and
-        // set it as the texture to render to.
-        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
-
-        colorAttach && (colorAttach.view =
-            this.context!.getCurrentTexture().createView());
-
-
-        // make a command encoder to start encoding commands
-        const encoder = this.device!.createCommandEncoder({
-            label: 'our encoder'
-        });
-
-        // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
-        pass.setPipeline(this.pipeline as GPURenderPipeline)
-        this.objectInfos.forEach(({bindGroups, matrix, uniformBuffer, uniformValues}, i) => {
-            const bindGroup = bindGroups[this.texNdx];
-      
-            const xSpacing = 1.2;
-            const ySpacing = 0.7;
-            const zDepth = 50;
-      
-            const x = i % 4 - 1.5;
-            const y = i < 4 ? 1 : -1;
-      
-            mat4.translate(this.viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
-            mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
-            mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
-            mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
-      
-            // copy the values from JavaScript to the GPU
-            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
-      
-            pass.setBindGroup(0, bindGroup);
-            pass.draw(6);  // call our vertex shader 6 times
-          });
-        pass.end();
-
-        const commandBuffer = encoder.finish();
-        this.device!.queue.submit([commandBuffer]);
-    }
 }
 
 interface objectInfoInterface {
-    
-    bindGroups:GPUBindGroup[],
-    matrix:Float32Array,
-    uniformValues:Float32Array,
-    uniformBuffer:GPUBuffer,
+
+    bindGroups: GPUBindGroup[],
+    matrix: Float32Array,
+    uniformValues: Float32Array,
+    uniformBuffer: GPUBuffer,
 
 }

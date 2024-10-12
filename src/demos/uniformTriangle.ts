@@ -32,7 +32,7 @@ export class UniformTriangle extends Base {
         //#endregion
 
         //#region  render pipeline
-        UniformTriangle.pipeline = device.createRenderPipeline({
+        this.pipeline = device.createRenderPipeline({
             label: 'our hardcoded red triangle pipeline',
             layout: 'auto',
             vertex: {
@@ -55,28 +55,28 @@ export class UniformTriangle extends Base {
             4 * 4 + // color is 4 32bit floats (4bytes each)
             2 * 4 + // scale is 2 32bit floats (4bytes each)
             2 * 4;  // offset is 2 32bit floats (4bytes each)
-        UniformTriangle.uniformBuffer = device.createBuffer({
+        this.uniformBuffer = device.createBuffer({
             size: uniformBufferSize,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
         // create a typedarray to hold the values for the uniforms in JavaScript
-        UniformTriangle.uniformValues = new Float32Array(uniformBufferSize / 4);
+        this.uniformValues = new Float32Array(uniformBufferSize / 4);
 
-        UniformTriangle.bindGroup = device.createBindGroup({
-            layout: UniformTriangle.pipeline.getBindGroupLayout(0),
+        this.bindGroup = device.createBindGroup({
+            layout: this.pipeline.getBindGroupLayout(0),
             entries: [
                 {
                     binding: 0,
                     resource: {
-                        buffer: UniformTriangle.uniformBuffer
+                        buffer: this.uniformBuffer
                     }
                 },
             ],
         });
 
         //#region  渲染队列参数
-        UniformTriangle.renderPassDescriptor = {
+        this.renderPassDescriptor = {
             label: 'our basic canvas renderPass',
             colorAttachments: [
                 {
@@ -88,47 +88,47 @@ export class UniformTriangle extends Base {
             ],
         };
 
-        UniformTriangle.initHTMLControl();
+        this.initHTMLControl();
         //#endregion
-        UniformTriangle.isInited = true;
+        this.isInited = true;
     }
 
-    static update(dt:number) {
-        if (!UniformTriangle.isInited) return;
-        if (UniformTriangle.valueChange) {
-            UniformTriangle.uniformValues.set(UniformTriangle.color, UniformTriangle.kColorOffset);        // set the color
-            UniformTriangle.uniformValues.set(UniformTriangle.offset, UniformTriangle.kOffsetOffset);      // set the offset
-            UniformTriangle.uniformValues.set([UniformTriangle.scale[0] / UniformTriangle.aspect, UniformTriangle.scale[1]], UniformTriangle.kScaleOffset); // set the scale
+    static update() {
+        if (!this.isInited) return;
+        if (this.valueChange) {
+            this.uniformValues.set(this.color, this.kColorOffset);        // set the color
+            this.uniformValues.set(this.offset, this.kOffsetOffset);      // set the offset
+            this.uniformValues.set([this.scale[0] / this.aspect, this.scale[1]], this.kScaleOffset); // set the scale
 
             // copy the values from JavaScript to the GPU
-            UniformTriangle.device.queue.writeBuffer(UniformTriangle.uniformBuffer, 0, UniformTriangle.uniformValues);
-            UniformTriangle.valueChange = false
+            this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
+            this.valueChange = false
         }
     }
 
-    static draw(dt:number) {
-        if (!UniformTriangle.isInited) return;
+    static draw() {
+        if (!this.isInited) return;
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
-        let colorAttach = Array.from(UniformTriangle.renderPassDescriptor.colorAttachments)[0];
+        let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
 
         colorAttach && (colorAttach.view =
-            UniformTriangle.context!.getCurrentTexture().createView());
+            this.context!.getCurrentTexture().createView());
 
         // make a command encoder to start encoding commands
-        const encoder = UniformTriangle.device!.createCommandEncoder({
+        const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'
         });
 
         // make a render pass encoder to encode render specific commands
-        const pass = encoder.beginRenderPass(UniformTriangle.renderPassDescriptor);
+        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
-        pass.setBindGroup(0, UniformTriangle.bindGroup);
+        pass.setBindGroup(0, this.bindGroup);
         pass.draw(3);  // call our vertex shader 3 times
         pass.end();
 
         const commandBuffer = encoder.finish();
-        UniformTriangle.device!.queue.submit([commandBuffer]);
+        this.device!.queue.submit([commandBuffer]);
     }
     static destory() {
         const parentDom = (this.context.canvas as HTMLCanvasElement).parentElement!;
@@ -145,37 +145,37 @@ export class UniformTriangle extends Base {
             const input = parentDom.querySelector('#uniformTriangleInputOffsetX') as HTMLInputElement
             input.removeEventListener('input', UniformTriangle.offstXChange)
         }
-       
-       
+
+
     }
     //#region  user control
     private static initHTMLControl() {
         const parentDom = (this.context.canvas as HTMLCanvasElement).parentElement!;
         parentDom.style.position = 'relative';
         {
-        const input = document.createElement('input');
-        input.id = "uniformTriangleInputColor"
-        input.type = "color"
-        input.style.position = 'absolute';
-        input.style.right = '5px';
-        input.style.top = '5px';
-        input.value = '#00ff00'
-        input.addEventListener('input', UniformTriangle.colorChange, false)
-        parentDom?.appendChild(input);
+            const input = document.createElement('input');
+            input.id = "uniformTriangleInputColor"
+            input.type = "color"
+            input.style.position = 'absolute';
+            input.style.right = '5px';
+            input.style.top = '5px';
+            input.value = '#00ff00'
+            input.addEventListener('input', UniformTriangle.colorChange, false)
+            parentDom?.appendChild(input);
         }
         {
-        const input = document.createElement('input');
-        input.id = "uniformTriangleInputScaleX"
-        input.type = "range"
-        input.min = '0.1';
-        input.max = '2';
-        input.step = '0.1'
-        input.value = '0.5'
-        input.style.position = 'absolute';
-        input.style.right = '5px';
-        input.style.top = '35px';
-        input.addEventListener('input', UniformTriangle.scaleXChange, false)
-        parentDom?.appendChild(input);
+            const input = document.createElement('input');
+            input.id = "uniformTriangleInputScaleX"
+            input.type = "range"
+            input.min = '0.1';
+            input.max = '2';
+            input.step = '0.1'
+            input.value = '0.5'
+            input.style.position = 'absolute';
+            input.style.right = '5px';
+            input.style.top = '35px';
+            input.addEventListener('input', UniformTriangle.scaleXChange, false)
+            parentDom?.appendChild(input);
         }
 
         {
@@ -199,22 +199,22 @@ export class UniformTriangle extends Base {
 
         const value = (e.target as HTMLInputElement).value;
         console.log(hexToRgb(value))
-        UniformTriangle.color = [...hexToRgb(value), 1]
-        UniformTriangle.valueChange = true;
+        this.color = [...hexToRgb(value), 1]
+        this.valueChange = true;
     }
 
     private static scaleXChange(e: Event) {
 
         const value = (e.target as HTMLInputElement).value;
-        UniformTriangle.scale[0] = +value
-        UniformTriangle.valueChange = true;
+        this.scale[0] = +value
+        this.valueChange = true;
     }
 
     private static offstXChange(e: Event) {
 
         const value = (e.target as HTMLInputElement).value;
-        UniformTriangle.offset[0] = +value
-        UniformTriangle.valueChange = true;
+        this.offset[0] = +value
+        this.valueChange = true;
     }
     //#endregion
 }

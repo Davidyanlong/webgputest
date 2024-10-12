@@ -31,6 +31,7 @@ import { DirectionalLight } from "./directionalLight";
 import { PointLight } from "./pointLight";
 import { SpotLight } from "./spotLight";
 import { EnvironmentMap } from "./environmentMap";
+import { Skybox } from "./skybox";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -65,5 +66,6 @@ export const demos = [
     DirectionalLight,
     PointLight,
     SpotLight,
-    EnvironmentMap
+    EnvironmentMap,
+    Skybox
 ]

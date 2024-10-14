@@ -30,6 +30,8 @@ import { LookAt } from "./lookAt";
 import { DirectionalLight } from "./directionalLight";
 import { PointLight } from "./pointLight";
 import { SpotLight } from "./spotLight";
+import { EnvironmentMap } from "./environmentMap";
+import { Skybox } from "./skybox";
 import { ComputeShader } from "./computeShader";
 
 // 保证案例的输出顺序
@@ -65,5 +67,7 @@ export const demos = [
     DirectionalLight,
     PointLight,
     SpotLight,
-    ComputeShader
+    EnvironmentMap,
+    Skybox,
+    ComputeShader,
 ]

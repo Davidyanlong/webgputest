@@ -158,6 +158,11 @@ export class GenerateMips {
     this.copySourcesToTexture(device, texture, sources, options);
     return texture;
   }
+
+  public static async  createTextureFromImages(device:GPUDevice, urls:string[], options?:textureParams) {
+    const images = await Promise.all(urls.map(loadImageBitmap));
+    return this.createTextureFromSources(device, images, options);
+  }
 }
 
 interface textureParams {

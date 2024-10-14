@@ -95,6 +95,8 @@ export const euclideanModulo = (x: number, a: number) => x - a * Math.floor(x / 
 
 export type typeArray = Float32Array | Uint8Array | Int16Array | Int32Array | Uint32Array | Float64Array
 
+export const arrayProd = (arr: typeArray | number[]) => Array.from(arr).reduce((a, b) => a * b);
+
 export interface mipMapParams {
   data: typeArray,
   width: number,

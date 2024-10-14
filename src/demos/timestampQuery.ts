@@ -201,7 +201,7 @@ export class TimestampQuery extends Base {
     static update(dt: number): void {
         let now = dt * 0.001;
         const deltaTime = now - this.then;
-        this.then = now;
+        
       
         if (!this.isInited) return;
           // 渲染多个对象
@@ -263,6 +263,7 @@ export class TimestampQuery extends Base {
         this.fpsAverage.addSample(1 / deltaTime);
         this.jsAverage.addSample(jsTime);
         this.stat();
+        this.then = now;
     }
 
     private static initGUI() {

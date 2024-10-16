@@ -33,6 +33,7 @@ import { SpotLight } from "./spotLight";
 import { EnvironmentMap } from "./environmentMap";
 import { Skybox } from "./skybox";
 import { ComputeShader } from "./computeShader";
+import { ComputeHistogram } from "./computeHistogram";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -70,4 +71,5 @@ export const demos = [
     EnvironmentMap,
     Skybox,
     ComputeShader,
+    ComputeHistogram
 ]

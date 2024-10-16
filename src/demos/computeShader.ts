@@ -3,7 +3,6 @@ import shadercode from '../shaders/computeShader/computeShader.wgsl?raw'
 import { arrayProd } from "../utils/utils"
 
 export class ComputeShader extends Base {
-    public static numLen = 5
     private static bindGroup: GPUBindGroup
     private static workgroupReadBuffer: GPUBuffer
     private static localReadBuffer: GPUBuffer

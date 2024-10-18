@@ -57,7 +57,6 @@ export class MSAATriangle extends Base {
             ],
         };
         //#endregion
-
         // 创建多重采样texture
         this.multsampleTexture = this.device.createTexture({
             format:this.presentationFormat,
@@ -66,12 +65,36 @@ export class MSAATriangle extends Base {
             size:[this.context.canvas.width, this.context.canvas.height],
             sampleCount: 4,
         })
+       
         this.isInited = true;
     }
 
 
     static draw() {
         if (!this.isInited) return;
+
+ 
+
+        const canvasTexture = this.context.getCurrentTexture();
+        const textureWidth = canvasTexture.width 
+        const textureHeight = canvasTexture.height
+
+        if (!this.multsampleTexture ||
+            this.multsampleTexture.width !== textureWidth ||
+            this.multsampleTexture.height !== textureHeight) {
+            if (this.multsampleTexture) {
+                this.multsampleTexture.destroy();
+            }
+            this.multsampleTexture = this.device.createTexture({
+                format:this.presentationFormat,
+                usage:GPUTextureUsage.RENDER_ATTACHMENT,
+                // resize 需要重新创建texture
+                size:[textureWidth, textureHeight],
+                sampleCount: 4,
+            })
+        }
+
+
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
         let colorAttach = Array.from(this.renderPassDescriptor.colorAttachments)[0];
@@ -79,7 +102,7 @@ export class MSAATriangle extends Base {
         // 图像先渲染到多重采样纹理中
         colorAttach && (colorAttach.view =
             this.multsampleTexture.createView());
-
+            
         // 然后再输出
         colorAttach && (colorAttach.resolveTarget =
             this.context!.getCurrentTexture().createView());

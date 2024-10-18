@@ -99,7 +99,7 @@ export class CubeTexture extends Base {
                 },
             ],
             depthStencilAttachment: {
-                view: this.depthTexture.createView(),
+                view: this.context!.getCurrentTexture().createView(),
                 depthClearValue: 1.0,
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
@@ -149,6 +149,7 @@ export class CubeTexture extends Base {
 
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
+
         super.getDepthTexture();
         this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
 

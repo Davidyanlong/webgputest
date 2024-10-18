@@ -88,8 +88,8 @@ export class Base {
          // 这段代码正常应该存放到resize 代码中
 
          const canvasTexture = this.context.getCurrentTexture();
-         const textureWidth = canvasTexture.width * devicePixelRatio
-         const textureHeight = canvasTexture.height * devicePixelRatio
+         const textureWidth = canvasTexture.width 
+         const textureHeight = canvasTexture.height
          if (!this.depthTexture ||
             this.depthTexture.width !== textureWidth ||
             this.depthTexture.height !== textureHeight) {

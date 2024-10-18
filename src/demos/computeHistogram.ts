@@ -9,17 +9,11 @@ export class ComputeHistogram extends Base {
     private static bindGroup: GPUBindGroup
     private static chunksBuffer: GPUBuffer
     private static resultBuffer: GPUBuffer
-    private static globalReadBuffer: GPUBuffer
-    private static workgroupBuffer: GPUBuffer
-    private static localBuffer: GPUBuffer
-    private static globalBuffer: GPUBuffer
     private static isComputed: boolean;
 
     public static dispatchCount: [number, number];
     public static workgroupSize: [number, number] = [256, 1];
-    private static numThreadsPerWorkgroup: number
     private static container: HTMLDivElement
-    private static numResults: number
 
     private static chunkSumPipeline: GPUComputePipeline
     private static sumBindGroups: GPUBindGroup[]
@@ -52,8 +46,6 @@ export class ComputeHistogram extends Base {
             ])  
             
         })
-
-        console.log(computeHistogramShaderCode.replace('$chunkSize$', `${this.workgroupSize[0] * this.workgroupSize[1]}`))
 
 
         this.pipeline = device.createComputePipeline({

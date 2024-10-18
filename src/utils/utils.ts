@@ -97,6 +97,10 @@ export type typeArray = Float32Array | Uint8Array | Int16Array | Int32Array | Ui
 
 export const arrayProd = (arr: typeArray | number[]) => Array.from(arr).reduce((a, b) => a * b);
 
+export const range = (i:number, fn:(...args:any[])=>number):number[] => new Array(i).fill(0).map((_, i) => fn(i));
+
+export const subpart = (view:typeArray, offset:number, length:number) => view.subarray(offset, offset + length);
+
 export interface mipMapParams {
   data: typeArray,
   width: number,

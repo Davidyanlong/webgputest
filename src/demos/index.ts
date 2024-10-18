@@ -1,4 +1,3 @@
-
 import { SimpleTriangle } from "./simpleTriangle";
 import { ComputeDynamicOffsets } from "./computeDynamicOffsets";
 import { SimpleCompute } from './simpleCompute';
@@ -34,6 +33,7 @@ import { EnvironmentMap } from "./environmentMap";
 import { Skybox } from "./skybox";
 import { ComputeShader } from "./computeShader";
 import { ComputeHistogram } from "./computeHistogram";
+import { ComputeVideoHistogram } from "./computeVideo";
 
 // 保证案例的输出顺序
 export const demos = [
@@ -71,5 +71,6 @@ export const demos = [
     EnvironmentMap,
     Skybox,
     ComputeShader,
-    ComputeHistogram
+    ComputeHistogram,
+    ComputeVideoHistogram,
 ]

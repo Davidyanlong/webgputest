@@ -39,7 +39,7 @@ export class Skybox extends Base {
             minFilter: 'linear',
             mipmapFilter: 'linear',
         });
-        const { texture, depthTexture } = await this.initTexture()
+        const { texture } = await this.initTexture()
 
         //#region skybox
         const skyBoxModule = device.createShaderModule({
@@ -169,7 +169,7 @@ export class Skybox extends Base {
                 },
             ],
             depthStencilAttachment: {
-                view: depthTexture.createView(),
+                view: this.context!.getCurrentTexture().createView(),
                 depthClearValue: 1.0,
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
@@ -231,7 +231,8 @@ export class Skybox extends Base {
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
 
-
+        super.getDepthTexture()
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
         // make a command encoder to start encoding commands
         const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'
@@ -270,16 +271,9 @@ export class Skybox extends Base {
             ],
             { mips: true, flipY: false });
 
-        let canvasTexture = this.context.getCurrentTexture();
-        let depthTexture = this.device.createTexture({
-            size: [canvasTexture.width, canvasTexture.height],
-            format: 'depth24plus',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        });
 
         return {
             texture,
-            depthTexture
         };
     }
 

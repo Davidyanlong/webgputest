@@ -13,7 +13,6 @@ export class Camera extends Base {
     private static settings: Record<string, any>
     private static vertexBuffer: GPUBuffer
     private static numVertices: number
-    private static depthTexture: GPUTexture
     private static objectInfos: objectInfosType[] = []
     private static numFs: number = 5
 
@@ -205,21 +204,8 @@ export class Camera extends Base {
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
 
-        const canvasTexture = this.context.getCurrentTexture();
-
         // 这段代码正常应该存放到resize 代码中
-        if (!this.depthTexture ||
-            this.depthTexture.width !== canvasTexture.width ||
-            this.depthTexture.height !== canvasTexture.height) {
-            if (this.depthTexture) {
-                this.depthTexture.destroy();
-            }
-            this.depthTexture = this.device.createTexture({
-                size: [canvasTexture.width, canvasTexture.height],
-                format: 'depth24plus',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            });
-        }
+        super.getDepthTexture();
         this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
 
 
@@ -244,7 +230,7 @@ export class Camera extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    
+
     private static initGUI() {
 
         // @ts-ignore

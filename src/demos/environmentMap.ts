@@ -68,7 +68,7 @@ export class EnvironmentMap extends Base {
 
         //#endregion
 
-        const {texture, depthTexture} = await this.initTexture()
+        const {texture } = await this.initTexture()
 
         const uniformBuffer = this.uniformBuffer= this.initUniform()
 
@@ -104,7 +104,7 @@ export class EnvironmentMap extends Base {
                 },
             ],
             depthStencilAttachment: {
-                view: depthTexture.createView(),
+                view: this.context!.getCurrentTexture().createView(),
                 depthClearValue: 1.0,
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
@@ -150,6 +150,8 @@ export class EnvironmentMap extends Base {
 
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
+         super.getDepthTexture()
+         this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
 
 
         // make a command encoder to start encoding commands
@@ -183,17 +185,9 @@ export class EnvironmentMap extends Base {
                 '/cube//leadenhall_market/neg-z.jpg',  
               ],
             { mips: true, flipY: false });
-
-        let canvasTexture = this.context.getCurrentTexture();
-        let depthTexture = this.device.createTexture({
-            size: [canvasTexture.width, canvasTexture.height],
-            format: 'depth24plus',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        });
-
+            
         return {
-            texture,
-            depthTexture
+            texture
         };
     }
 

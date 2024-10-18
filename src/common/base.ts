@@ -6,6 +6,7 @@ export class Base {
     protected static pipeline: GPURenderPipeline | GPUComputePipeline
     protected static device: GPUDevice
     protected static context: GPUCanvasContext
+    protected static depthTexture:GPUTexture
     protected static renderPassDescriptor: GPURenderPassDescriptor
     protected static aspect = 1;
     protected static presentationFormat: GPUTextureFormat
@@ -83,6 +84,26 @@ export class Base {
         this.io.disconnect();
     }
 
+    public static getDepthTexture(){
+         // 这段代码正常应该存放到resize 代码中
+
+         const canvasTexture = this.context.getCurrentTexture();
+         const textureWidth = canvasTexture.width * devicePixelRatio
+         const textureHeight = canvasTexture.height * devicePixelRatio
+         if (!this.depthTexture ||
+            this.depthTexture.width !== textureWidth ||
+            this.depthTexture.height !== textureHeight) {
+            if (this.depthTexture) {
+                this.depthTexture.destroy();
+            }
+            this.depthTexture = this.device.createTexture({
+                size: [textureWidth, textureHeight],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+        }
+    }
+
     private static createDom(canvasId: string, parentDom: HTMLDivElement | null = null): HTMLCanvasElement | null {
         let canvas: HTMLCanvasElement | null = null;
         if (parentDom === null) {
@@ -106,8 +127,8 @@ export class Base {
         this.observer ||= new ResizeObserver(entries => {
             for (const entry of entries) {
                 const canvas = entry.target as HTMLCanvasElement;
-                const width = entry.contentBoxSize[0].inlineSize;
-                const height = entry.contentBoxSize[0].blockSize;
+                const width = entry.contentBoxSize[0].inlineSize * devicePixelRatio;
+                const height = entry.contentBoxSize[0].blockSize * devicePixelRatio;
                 canvas.width = Math.max(1, Math.min(width, this.device.limits.maxTextureDimension2D));
                 canvas.height = Math.max(1, Math.min(height, this.device.limits.maxTextureDimension2D));
                 // 验证是否在视口内
@@ -159,5 +180,7 @@ export class Base {
         this.mo ||= new MutationObserver(callback);
         return config
     }
+
+    
 
 }

@@ -14,7 +14,6 @@ export class PointLight extends Base {
     private static settings: Record<string, any>
     private static vertexBuffer: GPUBuffer
     private static numVertices: number
-    private static depthTexture: GPUTexture
 
     private static bindGroup: GPUBindGroup
     private static worldViewProjectionValue: Float32Array
@@ -213,21 +212,7 @@ export class PointLight extends Base {
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
 
-        const canvasTexture = this.context.getCurrentTexture();
-
-        // 这段代码正常应该存放到resize 代码中
-        if (!this.depthTexture ||
-            this.depthTexture.width !== canvasTexture.width ||
-            this.depthTexture.height !== canvasTexture.height) {
-            if (this.depthTexture) {
-                this.depthTexture.destroy();
-            }
-            this.depthTexture = this.device.createTexture({
-                size: [canvasTexture.width, canvasTexture.height],
-                format: 'depth24plus',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            });
-        }
+        super.getDepthTexture();
         this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
 
 

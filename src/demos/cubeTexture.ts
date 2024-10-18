@@ -10,14 +10,14 @@ import { createCubeVertices, faceCanvases } from '../utils/cube'
  */
 export class CubeTexture extends Base {
     private static bindGroup: GPUBindGroup
-    private static vertexBuffer:GPUBuffer
-    private static indexBuffer:GPUBuffer
-    private static uniformBuffer:GPUBuffer
-    private static matrixValue:Float32Array
-    private static projectionMatrix:Float32Array
-    private static viewMatrix:Float32Array
-    private static uniformValues:Float32Array
-    private static numVertices:number
+    private static vertexBuffer: GPUBuffer
+    private static indexBuffer: GPUBuffer
+    private static uniformBuffer: GPUBuffer
+    private static matrixValue: Float32Array
+    private static projectionMatrix: Float32Array
+    private static viewMatrix: Float32Array
+    private static uniformValues: Float32Array
+    private static numVertices: number
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
@@ -63,9 +63,9 @@ export class CubeTexture extends Base {
 
         //#endregion
 
-        const {texture, depthTexture} = await this.initTexture()
+        const { texture } = await this.initTexture()
 
-        const uniformBuffer = this.uniformBuffer= this.initUniform()
+        const uniformBuffer = this.uniformBuffer = this.initUniform()
 
         this.initVertexData()
 
@@ -99,7 +99,7 @@ export class CubeTexture extends Base {
                 },
             ],
             depthStencilAttachment: {
-                view: depthTexture.createView(),
+                view: this.depthTexture.createView(),
                 depthClearValue: 1.0,
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
@@ -118,16 +118,16 @@ export class CubeTexture extends Base {
         );
         this.viewMatrix = new Float32Array(16);
         this.viewMatrix = mat4.lookAt(
-          [0, 1, 5],  // camera position
-          [0, 0, 0],  // target
-          [0, 1, 0],  // up
+            [0, 1, 5],  // camera position
+            [0, 0, 0],  // target
+            [0, 1, 0],  // up
         );
 
 
         //#endregion
         this.isInited = true;
     }
-    
+
     static update(dt: number): void {
         if (!this.isInited) return;
         const time = dt * 0.001
@@ -135,7 +135,7 @@ export class CubeTexture extends Base {
         mat4.rotateX(this.matrixValue, time, this.matrixValue);
         mat4.rotateY(this.matrixValue, time, this.matrixValue);
         mat4.rotateZ(this.matrixValue, time, this.matrixValue);
-    
+
         // upload the uniform values to the uniform buffer
         this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
 
@@ -149,7 +149,8 @@ export class CubeTexture extends Base {
 
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
-
+        super.getDepthTexture();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
 
         // make a command encoder to start encoding commands
         const encoder = this.device!.createCommandEncoder({
@@ -160,8 +161,8 @@ export class CubeTexture extends Base {
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer);
-        pass.setIndexBuffer(this.indexBuffer,'uint16');
-    
+        pass.setIndexBuffer(this.indexBuffer, 'uint16');
+
         pass.setBindGroup(0, this.bindGroup);
         pass.drawIndexed(this.numVertices);
         pass.end();
@@ -169,20 +170,14 @@ export class CubeTexture extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    
+
     private static async initTexture() {
         const texture = await GenerateMips.createTextureFromSources(
             this.device, faceCanvases, { mips: true, flipY: false });
-        let canvasTexture = this.context.getCurrentTexture();
-        let depthTexture = this.device.createTexture({
-            size: [canvasTexture.width, canvasTexture.height],
-            format: 'depth24plus',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        });
+       
 
         return {
-            texture,
-            depthTexture
+            texture
         };
     }
 
@@ -195,7 +190,7 @@ export class CubeTexture extends Base {
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
-        const uniformValues =  this.uniformValues= new Float32Array(uniformBufferSize / 4);
+        const uniformValues = this.uniformValues = new Float32Array(uniformBufferSize / 4);
 
         // offsets to the various uniform values in float32 indices
         const kMatrixOffset = 0;

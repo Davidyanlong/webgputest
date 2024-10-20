@@ -1,10 +1,12 @@
 
 import { GPUContext } from './common/gpuContext'
 import { demos } from './demos/index'
+
 export class Application {
     static async initalize() {
         // 初始化GPU 上下文
         await GPUContext.initialize();
+
 
         for (let demo of demos) {
             console.log(`${demo.name} initialized`)

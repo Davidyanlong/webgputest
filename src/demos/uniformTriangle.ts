@@ -17,6 +17,8 @@ export class UniformTriangle extends Base {
     private static uniformValues: Float32Array
     private static uniformBuffer: GPUBuffer
     private static valueChange = true
+    private static setting: Record<string, any>
+    private static gui:any
 
     static async initialize(device: GPUDevice) {
 
@@ -87,8 +89,8 @@ export class UniformTriangle extends Base {
                 }
             ],
         };
-
-        this.initHTMLControl();
+        this.initGUI()
+        this.valueChange = true
         //#endregion
         this.isInited = true;
     }
@@ -131,92 +133,56 @@ export class UniformTriangle extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
     static destory() {
-        const parentDom = (this.context.canvas as HTMLCanvasElement).parentElement!;
-        {
-            const input = parentDom.querySelector('#uniformTriangleInputColor') as HTMLInputElement
-            input.removeEventListener('input', UniformTriangle.colorChange)
-        }
-        {
-            const input = parentDom.querySelector('#uniformTriangleInputScaleX') as HTMLInputElement
-            input.removeEventListener('input', UniformTriangle.scaleXChange)
-        }
-
-        {
-            const input = parentDom.querySelector('#uniformTriangleInputOffsetX') as HTMLInputElement
-            input.removeEventListener('input', UniformTriangle.offstXChange)
-        }
-
 
     }
-    //#region  user control
-    private static initHTMLControl() {
-        const parentDom = (this.context.canvas as HTMLCanvasElement).parentElement!;
-        parentDom.style.position = 'relative';
-        {
-            const input = document.createElement('input');
-            input.id = "uniformTriangleInputColor"
-            input.type = "color"
-            input.style.position = 'absolute';
-            input.style.right = '5px';
-            input.style.top = '5px';
-            input.value = '#00ff00'
-            input.addEventListener('input', UniformTriangle.colorChange, false)
-            parentDom?.appendChild(input);
-        }
-        {
-            const input = document.createElement('input');
-            input.id = "uniformTriangleInputScaleX"
-            input.type = "range"
-            input.min = '0.1';
-            input.max = '2';
-            input.step = '0.1'
-            input.value = '0.5'
-            input.style.position = 'absolute';
-            input.style.right = '5px';
-            input.style.top = '35px';
-            input.addEventListener('input', UniformTriangle.scaleXChange, false)
-            parentDom?.appendChild(input);
-        }
 
-        {
-            const input = document.createElement('input');
-            input.id = "uniformTriangleInputOffsetX"
-            input.type = "range"
-            input.min = '-1';
-            input.max = '1';
-            input.step = '0.1'
-            input.value = '-0.5'
-            input.style.position = 'absolute';
-            input.style.right = '5px';
-            input.style.top = '65px';
-            input.addEventListener('input', UniformTriangle.offstXChange, false)
-            parentDom?.appendChild(input);
+    private static initGUI() {
+        // @ts-ignore
+        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
+
+        if(this.gui) return;
+
+        this.setting = {
+            color: '#00ff00',
+            scaleX: 1,
+            scaleY: 1,
+            offsetX: 0,
+            offsetY: 0,
         }
 
 
+        // @ts-ignore
+        const gui = this.gui = new GUI({
+            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
+            width: '145px'
+        })
+        gui.domElement.style.top = '-300px';
+        gui.domElement.style.left = '150px';
+
+        this.setting
+        gui.addColor( this.setting, 'color').onChange((v:string)=>{
+            this.color = [...hexToRgb(v), 1]
+            this.valueChange = true;
+        })
+        gui.add(this.setting,'scaleX',0.1, 2).onChange((v:number)=>{
+            this.scale[0] = v
+            this.valueChange = true;
+        })
+        gui.add(this.setting,'scaleY',0.1, 2).onChange((v:number)=>{
+            this.scale[1] = v
+            this.valueChange = true;
+        })
+        gui.add(this.setting,'offsetX',-1, 1).onChange((v:number)=>{
+            this.offset[0] = v
+            this.valueChange = true;
+        })
+        gui.add(this.setting,'offsetY',-1, 1).onChange((v:number)=>{
+            this.offset[1] = v
+            this.valueChange = true;
+        })
+
     }
-    private static colorChange(e: Event) {
-
-        const value = (e.target as HTMLInputElement).value;
-        console.log(hexToRgb(value))
-        this.color = [...hexToRgb(value), 1]
-        this.valueChange = true;
-    }
-
-    private static scaleXChange(e: Event) {
-
-        const value = (e.target as HTMLInputElement).value;
-        this.scale[0] = +value
-        this.valueChange = true;
-    }
-
-    private static offstXChange(e: Event) {
-
-        const value = (e.target as HTMLInputElement).value;
-        this.offset[0] = +value
-        this.valueChange = true;
-    }
-    //#endregion
+   
 }
 
 

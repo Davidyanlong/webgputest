@@ -23,9 +23,12 @@ export class Base {
     }
     protected static initCanvas(canvasId: string, isOut = false, parentDom: HTMLDivElement | null = null) {
 
-        let canvas: HTMLCanvasElement | null = this.createDom(canvasId, parentDom);
-        //#region initilize
-        canvas ||= document.querySelector(`#${canvasId}`) as HTMLCanvasElement;
+        // 是否能够找到该ID的DOM对象
+        let canvas = document.querySelector(`#${canvasId}`) as HTMLCanvasElement
+        if(!canvas){
+           canvas =  this.createDom(canvasId, parentDom)  as HTMLCanvasElement;
+        }
+
         const context = canvas!.getContext('webgpu')!;
 
         this.domName = canvas.id;
@@ -45,7 +48,7 @@ export class Base {
             device,
             format: presentationFormat,
         });
-        //#endregion
+
 
         // 初始化窗口大小变化的监听
         this.initObserver();

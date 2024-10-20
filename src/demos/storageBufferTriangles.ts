@@ -10,13 +10,13 @@ import { rand } from "../utils/utils";
  *  storage max 128M
  */
 export class StorageBufferTriangles extends Base {
-    private static kColorOffset = 0;
-    private static kScaleOffset = 0;
-    private static kOffsetOffset = 4;
+    private static kColorOffset:number;
+    private static kScaleOffset:number;
+    private static kOffsetOffset:number;
     private static changingUnitSize: number;
 
     private static kNumObjects = 100;
-    private static objectInfos: ObjectInfo[] = [];
+    private static objectInfos: ObjectInfo[];
     private static storageValues: Float32Array;
     private static bindGroup: GPUBindGroup;
     private static storageBuffer: GPUBuffer;
@@ -26,6 +26,12 @@ export class StorageBufferTriangles extends Base {
     static async initialize(device: GPUDevice) {
         await super.initialize(device)
         this.initCanvas('storageBufferTriangles')
+
+        // 初始化值
+        this.objectInfos = []
+        this.kColorOffset = 0;
+        this.kScaleOffset = 0;
+        this.kOffsetOffset = 4;
 
         //#region  shaderModule
         const module = device.createShaderModule({

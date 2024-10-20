@@ -13,6 +13,7 @@ export class Base {
     protected static io: IntersectionObserver
     protected static observer: ResizeObserver
     protected static mo: MutationObserver
+    protected static gui:any
     protected static isInited = false
 
     private static ioEvent: (e: any) => void

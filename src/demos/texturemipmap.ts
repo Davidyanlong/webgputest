@@ -11,15 +11,17 @@ import { mat4 } from 'wgpu-matrix'
  */
 export class TextureMipMap extends Base {
     private static textures: GPUTexture[]
-    private static objectInfos: objectInfoInterface[] = []
-    private static texNdx = 0;
+    private static objectInfos: objectInfoInterface[];
+    private static texNdx:number;
     private static viewProjectionMatrix: Float32Array
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('textureMipMap')
 
-        //#endregion
+        // 初始化值
+        this.objectInfos = [];
+        this.texNdx = 0;
 
         //#region  shaderModule
         const module = device.createShaderModule({

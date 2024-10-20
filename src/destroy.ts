@@ -32,7 +32,7 @@ export class Destroy {
             },
             deviceStart:async ()=>{
                 await GPUContext.initialize();
-                demos[5].initialize(GPUContext.device)
+                demos[12].initialize(GPUContext.device)
                 // demos[1].initialize(GPUContext.device)
                 // demos[2].initialize(GPUContext.device)
                 // demos[3].initialize((GPUContext.device))

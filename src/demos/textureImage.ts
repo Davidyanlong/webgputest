@@ -7,18 +7,15 @@ import { loadImageBitmap } from "../utils/res"
  * 简单的三角形
  */
 export class TextureImage extends Base {
-    private static bindGroups: GPUBindGroup[] = []
+    private static bindGroups: GPUBindGroup[];
     private static settings:Record<string,string>
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('textureImage')
 
-        this.settings = {
-            addressModeU: 'repeat',
-            addressModeV: 'repeat',
-            magFilter: 'linear',
-          };
+        // 初始化值
+        this.bindGroups = [];
 
         this.initGUI();
 
@@ -134,10 +131,18 @@ export class TextureImage extends Base {
     }
 
     private static initGUI(){
+        if(this.gui) return;
+
+        this.settings = {
+            addressModeU: 'repeat',
+            addressModeV: 'repeat',
+            magFilter: 'linear',
+          };
+
         const addressOptions = ['repeat', 'clamp-to-edge'];
         const filterOptions = ['nearest', 'linear'];
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width:'145px'
         })

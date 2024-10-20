@@ -12,7 +12,7 @@ export class MultUniformTriangle extends Base {
     private static kOffsetOffset = 4;
 
     private static kNumObjects = 100;
-    private static objectInfos: ObjectInfo[] = [];
+    private static objectInfos: ObjectInfo[];
 
 
     static async initialize(device: GPUDevice) {
@@ -20,6 +20,8 @@ export class MultUniformTriangle extends Base {
         await super.initialize(device);
         super.initCanvas('multUniformTriangle')
 
+        // 初始化值，尽量在初始化的时候进行，下次初始化的时候依然有效
+        this.objectInfos = [];
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -55,7 +57,6 @@ export class MultUniformTriangle extends Base {
             2 * 4;  // padding
         const uniformBufferSize =
             2 * 4;  // scale is 2 32bit floats (4bytes each)
-
 
 
 

@@ -10,9 +10,9 @@ import { rand } from "../utils/utils";
  *  渲染需要单独绑定顶点插槽
  */
 export class VertexBufferTriangles extends Base {
-    private static kColorOffset = 0;
-    private static kScaleOffset = 0;
-    private static kOffsetOffset = 1;
+    private static kColorOffset: number;
+    private static kScaleOffset: number;
+    private static kOffsetOffset: number;
     private static changingUnitSize: number;
 
     private static kNumObjects = 100;
@@ -22,13 +22,19 @@ export class VertexBufferTriangles extends Base {
     private static indexBuffer: GPUBuffer;
     private static vertexValues: Float32Array;
     private static numVertices: number;
-    private static objectInfos: { scale: number }[] = [];
+    private static objectInfos: { scale: number }[];
 
 
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('vertexBufferTriangles')
+
+        // 初始化值
+        this.objectInfos = []
+        this.kColorOffset = 0;
+        this.kScaleOffset = 0;
+        this.kOffsetOffset = 1;
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -227,7 +233,7 @@ export class VertexBufferTriangles extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
- 
+
 
 
 }

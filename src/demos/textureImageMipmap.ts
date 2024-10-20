@@ -8,20 +8,24 @@ import { mat4 } from "wgpu-matrix"
  * 简单的三角形
  */
 export class TextureImageMipmap extends Base {
-    private static objectInfos: objectInfoInterface[] = []
-    private static texNdx = 0;
+    private static objectInfos: objectInfoInterface[];
+    private static texNdx: number;
     private static viewProjectionMatrix: Float32Array
+    private static textures: GPUTexture[]
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('textureImageMipmap')
+
+        // 初始化值
+        this.objectInfos = [];
+        this.texNdx = 0;
 
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -75,8 +79,8 @@ export class TextureImageMipmap extends Base {
         const target = [0, 0, 0];
         const viewMatrix = mat4.lookAt(cameraPosition, target, up);
         this.viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
-
         this.isInited = true;
+
     }
 
 
@@ -85,24 +89,27 @@ export class TextureImageMipmap extends Base {
         if (!this.isInited) return;
 
         // 数据更新
-        this.objectInfos.forEach(({ matrix, uniformBuffer, uniformValues }, i) => {
+        if (this.objectInfos?.length > 0) {
+            this.objectInfos.forEach(({ matrix, uniformBuffer, uniformValues }, i) => {
 
-            const xSpacing = 1.2;
-            const ySpacing = 0.7;
-            const zDepth = 50;
+                const xSpacing = 1.2;
+                const ySpacing = 0.7;
+                const zDepth = 50;
 
-            const x = i % 4 - 1.5;
-            const y = i < 4 ? 1 : -1;
+                const x = i % 4 - 1.5;
+                const y = i < 4 ? 1 : -1;
 
-            mat4.translate(this.viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
-            mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
-            mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
-            mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
+                mat4.translate(this.viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
+                mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
+                mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
+                mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
 
-            // copy the values from JavaScript to the GPU
-            this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+                // copy the values from JavaScript to the GPU
+                this.device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
-        });
+            });
+        }
+
     }
 
     static draw() {
@@ -124,25 +131,33 @@ export class TextureImageMipmap extends Base {
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline)
-        this.objectInfos.forEach(({ bindGroups }) => {
-            const bindGroup = bindGroups[this.texNdx];
-            pass.setBindGroup(0, bindGroup);
-            pass.draw(6);  // call our vertex shader 6 times
-        });
+        if (this.objectInfos?.length > 0) {
+            this.objectInfos.forEach(({ bindGroups }) => {
+                const bindGroup = bindGroups[this.texNdx];
+                pass.setBindGroup(0, bindGroup);
+                pass.draw(6);  // call our vertex shader 6 times
+            });
+        }
+
         pass.end();
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+
+
     }
     private static async initTexture() {
-        const textures = await Promise.all([
-            await GenerateMips.createTextureFromImage(this.device,
-                './f-texture.png', { mips: true, flipY: false }),
-            await GenerateMips.createTextureFromImage(this.device,
-                './coins.jpg', { mips: true }),
-            await GenerateMips.createTextureFromImage(this.device,
-                './Granite_paving_tileable_512x512.jpeg', { mips: true }),
-        ]);
+        if (!this.textures) {
+            this.textures = await Promise.all([
+                await GenerateMips.createTextureFromImage(this.device,
+                    './f-texture.png', { mips: true, flipY: false }),
+                await GenerateMips.createTextureFromImage(this.device,
+                    './coins.jpg', { mips: true }),
+                await GenerateMips.createTextureFromImage(this.device,
+                    './Granite_paving_tileable_512x512.jpeg', { mips: true }),
+            ]);
+        }
+
 
         // offsets to the various uniform values in float32 indices
         const kMatrixOffset = 0;
@@ -169,7 +184,7 @@ export class TextureImageMipmap extends Base {
             const uniformValues = new Float32Array(uniformBufferSize / 4);
             const matrix = uniformValues.subarray(kMatrixOffset, 16);
 
-            const bindGroups = textures.map(texture =>
+            const bindGroups = this.textures.map(texture =>
                 this.device.createBindGroup({
                     layout: this.pipeline.getBindGroupLayout(0),
                     entries: [
@@ -187,7 +202,7 @@ export class TextureImageMipmap extends Base {
                 uniformBuffer,
             });
         }
-        return textures;
+        return this.textures;
     }
 }
 

@@ -18,7 +18,6 @@ export class UniformTriangle extends Base {
     private static uniformBuffer: GPUBuffer
     private static valueChange = true
     private static setting: Record<string, any>
-    private static gui:any
 
     static async initialize(device: GPUDevice) {
 

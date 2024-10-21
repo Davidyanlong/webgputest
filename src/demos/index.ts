@@ -34,6 +34,8 @@ import { Skybox } from "./skybox";
 import { ComputeShader } from "./computeShader";
 import { ComputeHistogram } from "./computeHistogram";
 import { ComputeVideoHistogram } from "./computeVideo";
+import { PointMarker } from './pointMarker';
+import { BigPoint } from './bigPoint'
 
 // 保证案例的输出顺序
 export const demos = [
@@ -73,4 +75,6 @@ export const demos = [
     ComputeShader,
     ComputeHistogram,
     ComputeVideoHistogram,
+    PointMarker,
+    BigPoint
 ]

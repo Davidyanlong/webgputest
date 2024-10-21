@@ -6,7 +6,7 @@ export class Base {
     protected static pipeline: GPURenderPipeline | GPUComputePipeline
     protected static device: GPUDevice
     protected static context: GPUCanvasContext
-    protected static depthTexture:GPUTexture
+    protected static depthTexture:GPUTexture | null
     protected static renderPassDescriptor: GPURenderPassDescriptor
     protected static aspect = 1;
     protected static presentationFormat: GPUTextureFormat
@@ -21,6 +21,7 @@ export class Base {
         this.device = device;
         this.isInited = false;
         this.actived = true;
+        this.depthTexture = null;
     }
     protected static initCanvas(canvasId: string, isOut = false, parentDom: HTMLDivElement | null = null) {
 

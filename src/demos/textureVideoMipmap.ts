@@ -19,6 +19,9 @@ export class TextureVideoMipmap extends Base {
         await super.initialize(device)
         super.initCanvas('textureVideoMipmap')
 
+        // 参数初始化
+        this.objectInfos = [];
+
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
             code: shadercode,
@@ -44,14 +47,8 @@ export class TextureVideoMipmap extends Base {
         //#endregion
 
         await this.initTexture()
-
-        this.context.canvas.addEventListener('click', () => {
-            if (this.video.paused) {
-                this.video.play();
-            } else {
-                this.video.pause();
-            }
-        });
+        this.context.canvas.removeEventListener('click', this.videoClickEvent)
+        this.context.canvas.addEventListener('click', this.videoClickEvent);
 
 
         //#region  渲染队列参数
@@ -197,6 +194,13 @@ export class TextureVideoMipmap extends Base {
             });
         }
         return textures;
+    }
+    private static videoClickEvent = () => {
+        if (this.video.paused) {
+            this.video.play();
+        } else {
+            this.video.pause();
+        }
     }
 }
 

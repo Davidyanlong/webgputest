@@ -4,11 +4,23 @@ export class GenerateMips {
   private static module: GPUShaderModule
   private static sampler: GPUSampler
   private static pipelineByFormat: Record<string, GPURenderPipeline> = {}
+  private static _device:GPUDevice
+
+
+
   public static generateMips(device: GPUDevice, texture: GPUTexture) {
+    // 设备丢失后，所有的缓存都要清除掉
+    if(this._device !== device){
+      this.pipelineByFormat = {};
+      (this.module as any) = null;
+      (this.sampler as any) = null;
+
+    }
     this.module ||= device.createShaderModule({
       label: 'textured quad shaders for mip level generation',
       code: shadercode
     });
+
     this.sampler ||= device.createSampler({
       minFilter: 'linear',
       magFilter: 'linear',

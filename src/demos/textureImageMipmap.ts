@@ -28,6 +28,7 @@ export class TextureImageMipmap extends Base {
         });
         //#endregion
 
+
         //#region  render pipeline
         this.pipeline = device.createRenderPipeline({
             label: 'our hardcoded red triangle pipeline',
@@ -45,11 +46,10 @@ export class TextureImageMipmap extends Base {
 
         //#endregion
 
-        const textures = await this.initTexture()
+        await this.initTexture()
 
-        this.context.canvas.addEventListener('click', () => {
-            this.texNdx = (this.texNdx + 1) % textures.length;
-        });
+        this.context.canvas.removeEventListener('click', this.clickEvent)
+        this.context.canvas.addEventListener('click', this.clickEvent);
 
 
         //#region  渲染队列参数
@@ -147,16 +147,14 @@ export class TextureImageMipmap extends Base {
 
     }
     private static async initTexture() {
-        if (!this.textures) {
-            this.textures = await Promise.all([
-                await GenerateMips.createTextureFromImage(this.device,
-                    './f-texture.png', { mips: true, flipY: false }),
-                await GenerateMips.createTextureFromImage(this.device,
-                    './coins.jpg', { mips: true }),
-                await GenerateMips.createTextureFromImage(this.device,
-                    './Granite_paving_tileable_512x512.jpeg', { mips: true }),
-            ]);
-        }
+        this.textures = await Promise.all([
+            await GenerateMips.createTextureFromImage(this.device,
+                './f-texture.png', { mips: true, flipY: false }),
+            await GenerateMips.createTextureFromImage(this.device,
+                './coins.jpg', { mips: true }),
+            await GenerateMips.createTextureFromImage(this.device,
+                './Granite_paving_tileable_512x512.jpeg', { mips: true }),
+        ]);
 
 
         // offsets to the various uniform values in float32 indices
@@ -203,6 +201,9 @@ export class TextureImageMipmap extends Base {
             });
         }
         return this.textures;
+    }
+    private static clickEvent = () => {
+        this.texNdx = (this.texNdx + 1) % this.textures.length;
     }
 }
 

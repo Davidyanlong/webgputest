@@ -135,14 +135,6 @@ export class Transform extends Base {
         };
         //#endregion
 
-
-
-        this.settings = {
-            translation: [150, 100],
-            rotation: degToRad(30),
-            scale: [1, 1],
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -192,12 +184,19 @@ export class Transform extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
     private static initGUI() {
+        if(this.gui) return;
+
+        this.settings = {
+            translation: [150, 100],
+            rotation: degToRad(30),
+            scale: [1, 1],
+        };
 
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

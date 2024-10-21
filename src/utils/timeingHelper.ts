@@ -1,6 +1,8 @@
+import { GPUContext } from "../common/gpuContext";
+
 export class TimingHelper {
-    private canTimestamp: boolean;
-    private device: GPUDevice;
+    private canTimestamp!: boolean;
+    private device!: GPUDevice;
     private querySet!: GPUQuerySet;
     private resolveBuffer!: GPUBuffer;
     private resultBuffer!: GPUBuffer;
@@ -9,23 +11,29 @@ export class TimingHelper {
     private state: string = 'free';
 
     constructor(device: GPUDevice) {
+        this.initialize(device)
+    }
+
+    private initialize(device: GPUDevice){
         this.device = device;
-        this.canTimestamp = device.features.has('timestamp-query');
+        this.state = 'free'
+        this.canTimestamp = this.device.features.has('timestamp-query');
         if (this.canTimestamp) {
-            this.querySet = device.createQuerySet({
+            this.querySet = this.device.createQuerySet({
                 type: 'timestamp',
                 count: 2,
             });
-            this.resolveBuffer = device.createBuffer({
+            this.resolveBuffer = this.device.createBuffer({
                 size: this.querySet.count * 8,
                 usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.COPY_SRC,
             });
         }
+        this.resultBuffers = [];
     }
 
     private beginTimestampPass(encoder: GPUCommandEncoder, fnName: 'beginRenderPass' | 'beginComputePass', descriptor: GPURenderPassDescriptor) {
         if (this.canTimestamp) {
-            assert(this.state === 'free', 'state not free');
+            // assert(this.state === 'free', 'state not free');
             this.state = 'need resolve';
 
             const pass = encoder[fnName]({
@@ -62,7 +70,7 @@ export class TimingHelper {
     }
 
     private resolveTiming(encoder: GPUCommandEncoder) {
-        if (!this.canTimestamp) {
+        if (!this.canTimestamp || !this.device) {
             return;
         }
         assert(this.state === 'need resolve', 'must call addTimestampToPass');
@@ -81,6 +89,14 @@ export class TimingHelper {
         if (!this.canTimestamp) {
             return 0;
         }
+        if(GPUContext.isLost) {
+            (this.device as any) = null;
+            return 0;
+        }else if(this.device === null){
+            this.initialize(GPUContext.device)
+            return 0;
+        } 
+        
         assert(this.state === 'wait for result', 'must call resolveTiming');
         this.state = 'free';
 

@@ -276,8 +276,9 @@ export class Blend extends Base {
     }
 
     private static initGUI() {
+        if(this.gui) return;
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

@@ -18,6 +18,9 @@ export class TextureVideo extends Base {
         await super.initialize(device)
         super.initCanvas('textureVideo')
 
+        // 初始化参数
+        this.objectInfos = []
+
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
             code: shadercode,

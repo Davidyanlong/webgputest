@@ -188,11 +188,6 @@ export class TimestampQuery extends Base {
         };
         //#endregion
 
-
-        this.settings = {
-            numObjects: 100,
-        }
-
         this.initGUI();
         this.statInit();
 
@@ -260,16 +255,25 @@ export class TimestampQuery extends Base {
         });
 
         const jsTime = performance.now() - startTime;
-        this.fpsAverage.addSample(1 / deltaTime);
+        if(this.then!=0){
+            this.fpsAverage.addSample(1 / deltaTime);
+        }
+       
         this.jsAverage.addSample(jsTime);
         this.stat();
         this.then = now;
     }
 
     private static initGUI() {
+        if(this.gui) return;
+
+
+        this.settings = {
+            numObjects: 100,
+        }
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })
@@ -282,7 +286,13 @@ export class TimestampQuery extends Base {
     private static statInit(){
         this.canTimestamp =  GPUContext.adapter.features.has('timestamp-query');
         const parent = (this.context.canvas as HTMLCanvasElement).parentElement
-        const infoElem = this.infoElem =  document.createElement('div')
+        let infoElem = parent!.querySelector('#statElement') as HTMLDivElement
+        if(infoElem){
+            infoElem.innerHTML=''
+            parent?.removeChild(infoElem)
+        }
+        infoElem = this.infoElem =  document.createElement('div')
+        infoElem.id='statElement';
         infoElem.style.cssText = ` 
             position: relative;
             top: -350px;

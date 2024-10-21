@@ -17,7 +17,6 @@ export class Destroy {
             // width: '175px',
             title:'销毁相关测试'
         })
-        gui.name = 'xxx'
         gui.domElement.style.top = '10px';
         gui.domElement.style.left = '10px';
         
@@ -32,7 +31,7 @@ export class Destroy {
             },
             deviceStart:async ()=>{
                 await GPUContext.initialize();
-                demos[12].initialize(GPUContext.device)
+                demos[23].initialize(GPUContext.device)
                 // demos[1].initialize(GPUContext.device)
                 // demos[2].initialize(GPUContext.device)
                 // demos[3].initialize((GPUContext.device))

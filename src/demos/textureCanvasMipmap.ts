@@ -18,6 +18,9 @@ export class TextureCanvasMipmap extends Base {
 
         await super.initialize(device)
         super.initCanvas('textureCanvasMipmap')
+        
+        //初始化参数
+        this.objectInfos = [];
 
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
@@ -41,11 +44,8 @@ export class TextureCanvasMipmap extends Base {
 
         //#endregion
 
-        const textures = await this.initTexture()
+        await this.initTexture()
 
-        this.context.canvas.addEventListener('click', () => {
-            this.texNdx = (this.texNdx + 1) % textures.length;
-        });
 
 
         //#region  渲染队列参数
@@ -142,7 +142,7 @@ export class TextureCanvasMipmap extends Base {
 
         this.texture = GenerateMips.createTextureFromSource(this.device, this.canvasAnimationTexture.ctx.canvas, { mips: true })
 
-        const textures = await Promise.all([
+        const textures =  await Promise.all([
             this.texture
         ]);
 

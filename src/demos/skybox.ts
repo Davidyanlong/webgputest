@@ -232,7 +232,7 @@ export class Skybox extends Base {
             this.context!.getCurrentTexture().createView());
 
         super.getDepthTexture()
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
         // make a command encoder to start encoding commands
         const encoder = this.device!.createCommandEncoder({
             label: 'our encoder'

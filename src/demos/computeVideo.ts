@@ -48,6 +48,10 @@ export class ComputeVideoHistogram extends Base {
         await super.initialize(device)
         super.initCanvas('computeVideoHistogram')
 
+        // 参数初始化
+        this.sumBindGroups = [];
+        this.histogramDrawInfos = [];
+
         const chunkWidth = this.workgroupSize[0];
         const chunkHeight = this.workgroupSize[1];
         const chunkSize = this.chunkSize = chunkWidth * chunkHeight;

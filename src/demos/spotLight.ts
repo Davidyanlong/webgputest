@@ -157,17 +157,6 @@ export class SpotLight extends Base {
         };
         //#endregion
 
-
-
-        this.settings = {
-            rotation: degToRad(0),
-            shininess: 30,
-            innerLimit: degToRad(15),
-            outerLimit: degToRad(25),
-            aimOffsetX: -10,
-            aimOffsetY: 10,
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -243,7 +232,7 @@ export class SpotLight extends Base {
             this.context!.getCurrentTexture().createView());
 
         super.getDepthTexture();
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
         // make a command encoder to start encoding commands
         const encoder = this.device!.createCommandEncoder({
@@ -263,6 +252,15 @@ export class SpotLight extends Base {
     }
 
     private static initGUI() {
+        if (this.gui) return;
+        this.settings = {
+            rotation: degToRad(0),
+            shininess: 30,
+            innerLimit: degToRad(15),
+            outerLimit: degToRad(25),
+            aimOffsetX: -10,
+            aimOffsetY: 10,
+        };
 
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
@@ -270,7 +268,7 @@ export class SpotLight extends Base {
         const limitOptions = { min: 0, max: 90, minRange: 1, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

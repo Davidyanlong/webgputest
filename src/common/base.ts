@@ -76,8 +76,8 @@ export class Base {
         return context;
 
     }
-    public static update(dt: number) { }
-    public static draw(dt: number) { }
+    public static update(dt: number) { dt;}
+    public static draw(dt: number) { dt; }
     public static destory() {
         // 移除事件
         window.removeEventListener('scroll', this.ioEvent)

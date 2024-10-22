@@ -130,14 +130,6 @@ export class Orthogonal extends Base {
         };
         //#endregion
 
-
-
-        this.settings = {
-            translation: [45, 100, 0],
-            rotation: [degToRad(40), degToRad(25), degToRad(325)],
-            scale: [1, 1, 1],
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -177,7 +169,7 @@ export class Orthogonal extends Base {
 
         // 这段代码正常应该存放到resize 代码中
         super.getDepthTexture();
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
 
         // make a command encoder to start encoding commands
@@ -200,11 +192,18 @@ export class Orthogonal extends Base {
 
     private static initGUI() {
 
+        if(this.gui) return;
+        this.settings = {
+            translation: [45, 100, 0],
+            rotation: [degToRad(40), degToRad(25), degToRad(325)],
+            scale: [1, 1, 1],
+        };
+
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui =  new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

@@ -123,7 +123,7 @@ export class TextureVideoMipmap extends Base {
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline)
-        this.objectInfos.forEach(({ bindGroups }, i) => {
+        this.objectInfos.forEach(({ bindGroups }) => {
             const bindGroup = bindGroups[this.texNdx];
             pass.setBindGroup(0, bindGroup);
             pass.draw(6);  // call our vertex shader 6 times

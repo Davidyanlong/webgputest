@@ -31,10 +31,9 @@ export class Destroy {
             },
             deviceStart:async ()=>{
                 await GPUContext.initialize();
-                demos[23].initialize(GPUContext.device)
-                // demos[1].initialize(GPUContext.device)
-                // demos[2].initialize(GPUContext.device)
-                // demos[3].initialize((GPUContext.device))
+                demos.forEach(demo=>{
+                    demo.initialize(GPUContext.device)
+                })
             }
         }
         let gui = this.gui.addFolder('设备销毁测试')

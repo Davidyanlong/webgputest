@@ -184,7 +184,7 @@ export class TextureVideo extends Base {
         const texture = this.device.importExternalTexture({source: this.video});
 
         // 管线录制
-        this.objectInfos.forEach(({sampler,  uniformBuffer}, i) => {
+        this.objectInfos.forEach(({sampler,  uniformBuffer}) => {
             // 动态bindGroup 
             const bindGroup = this.device.createBindGroup({
                 layout: this.pipeline.getBindGroupLayout(0),

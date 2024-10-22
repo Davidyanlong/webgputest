@@ -28,6 +28,8 @@ export class LookAt extends Base {
             alphaMode: 'premultiplied'
         })
 
+        // 参数初始化
+        this.objectInfos = [];
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -135,14 +137,6 @@ export class LookAt extends Base {
         };
         //#endregion
 
-
-
-        this.settings = {
-            // 透视垂直视角
-            target: [0, 200, 300],
-            targetAngle: 0,
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -218,7 +212,7 @@ export class LookAt extends Base {
 
         // 这段代码正常应该存放到resize 代码中
         super.getDepthTexture()
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
 
         // make a command encoder to start encoding commands
@@ -245,11 +239,19 @@ export class LookAt extends Base {
 
     private static initGUI() {
 
+        if(this.gui) return;
+
+        this.settings = {
+            // 透视垂直视角
+            target: [0, 200, 300],
+            targetAngle: 0,
+        };
+
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

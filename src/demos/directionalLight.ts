@@ -139,12 +139,6 @@ export class DirectionalLight extends Base {
         };
         //#endregion
 
-
-
-        this.settings = {
-            rotation: degToRad(0),
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -200,7 +194,7 @@ export class DirectionalLight extends Base {
 
         // 这段代码正常应该存放到resize 代码中
         super.getDepthTexture();
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
 
         // make a command encoder to start encoding commands
@@ -222,12 +216,19 @@ export class DirectionalLight extends Base {
     }
 
     private static initGUI() {
+        if(this.gui) return;
+
+        
+        this.settings = {
+            rotation: degToRad(0),
+        };
+
 
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

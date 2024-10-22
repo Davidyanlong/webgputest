@@ -68,7 +68,7 @@ export class ComputeShader extends Base {
         });
 
         this.container = document.querySelector('#computeShaderDom')!;
-
+        this.container.innerHTML = ''
         this.isInited = true;
         this.isComputed = false;
 
@@ -103,10 +103,6 @@ export class ComputeShader extends Base {
         this.isComputed = true;
 
         this.getBufferData();
-    }
-
-
-    static setData(arr: number[], offset: number = 0) {
     }
 
     static async getBufferData() {

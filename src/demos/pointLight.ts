@@ -152,13 +152,6 @@ export class PointLight extends Base {
         };
         //#endregion
 
-
-
-        this.settings = {
-            rotation: degToRad(0),
-            shininess: 30,
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -213,7 +206,7 @@ export class PointLight extends Base {
             this.context!.getCurrentTexture().createView());
 
         super.getDepthTexture();
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
 
         // make a command encoder to start encoding commands
@@ -236,12 +229,18 @@ export class PointLight extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
     private static initGUI() {
+        if(this.gui) return
+
+        this.settings = {
+            rotation: degToRad(0),
+            shininess: 30,
+        };
 
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

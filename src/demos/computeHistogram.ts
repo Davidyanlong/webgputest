@@ -126,7 +126,7 @@ export class ComputeHistogram extends Base {
         }
 
         this.container = document.querySelector('#computeHistogram')!;
-
+        this.container.innerHTML = ''
         this.isInited = true;
         this.isComputed = false;
 
@@ -172,10 +172,6 @@ export class ComputeHistogram extends Base {
         this.isComputed = true;
 
         this.getBufferData();
-    }
-
-
-    static setData(arr: number[], offset: number = 0) {
     }
 
     static async getBufferData() {

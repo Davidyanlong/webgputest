@@ -131,15 +131,6 @@ export class Perspective extends Base {
         //#endregion
 
 
-
-        this.settings = {
-            // 透视垂直视角
-            fieldOfView: degToRad(100),
-            translation: [-65, 0, -120],
-            rotation: [degToRad(220), degToRad(25), degToRad(325)],
-            scale: [1, 1, 1],
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -177,7 +168,7 @@ export class Perspective extends Base {
             this.context!.getCurrentTexture().createView());
 
         super.getDepthTexture();
-        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture.createView();
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
 
         // make a command encoder to start encoding commands
@@ -199,12 +190,19 @@ export class Perspective extends Base {
     }
 
     private static initGUI() {
-
+        if (this.gui) return;
+        this.settings = {
+            // 透视垂直视角
+            fieldOfView: degToRad(100),
+            translation: [-65, 0, -120],
+            rotation: [degToRad(220), degToRad(25), degToRad(325)],
+            scale: [1, 1, 1],
+        };
         // @ts-ignore
         const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
         // @ts-ignore
-        const gui = new GUI({
+        const gui = this.gui = new GUI({
             parent: (this.context.canvas as HTMLCanvasElement).parentElement,
             width: '145px'
         })

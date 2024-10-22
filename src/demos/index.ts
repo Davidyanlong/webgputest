@@ -40,8 +40,8 @@ import { BigPoint } from './bigPoint'
 // 保证案例的输出顺序
 export const demos = [
     SimpleTriangle,
-    ComputeDynamicOffsets,
     SimpleCompute,
+    ComputeDynamicOffsets,
     ColorVertexTriangle,
     Checkerboard,
     UniformTriangle,

@@ -2,9 +2,10 @@ import { Base } from "../common/base"
 import shadercode from '../shaders/computeDynamicOffsets/computeDynamicOffsets.wgsl?raw'
 
 export class ComputeDynamicOffsets extends Base {
-    public static numLen = 5
+    public static numLen: number
+    
     private static bindGroup: GPUBindGroup
-    private static input: Float32Array = new Float32Array(64 * 3)
+    private static input: Float32Array
     private static workBuffer: GPUBuffer
     private static resultBuffer: GPUBuffer
     private static isComputed: boolean;
@@ -12,6 +13,9 @@ export class ComputeDynamicOffsets extends Base {
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
+        // 数据初始化
+        this.input = new Float32Array(64 * 3);
+        this.numLen = 5;
 
         //#region  compute pipeline
         const computeModule: GPUShaderModule = device.createShaderModule({
@@ -96,17 +100,7 @@ export class ComputeDynamicOffsets extends Base {
 
         // 测试计算管线
         const button = document.querySelector('#getSimpleCompute2') as HTMLButtonElement;
-        const resultSpan = document.querySelector('#simpleComputeResult2') as HTMLSpanElement;
-        button.addEventListener('click', (e) => {
-            e.stopPropagation()
-            this.setData(this.getRandomNums())
-            this.setData(this.getRandomNums(), 64)
-            this.update();
-            this.getBufferData().then((data) => {
-                console.log(data);
-                resultSpan.innerHTML = `input:<br/> a: ${data?.input.slice(0, this.numLen)} <br/> b: ${data?.input.slice(64, 64 + this.numLen)} <br/>result: ${data?.result.slice(128, 128+this.numLen)}`
-            })
-        }, false);
+        button.addEventListener('click', this.clickEvent, false);
 
         this.isInited = true;
 
@@ -125,7 +119,7 @@ export class ComputeDynamicOffsets extends Base {
         });
         computePass.setPipeline(this.pipeline as GPUComputePipeline);
         // 设置bindGroup buffer的偏移量
-        computePass.setBindGroup(0, this.bindGroup,[0, 256, 512]);
+        computePass.setBindGroup(0, this.bindGroup, [0, 256, 512]);
         // 设置计算通道
         computePass.dispatchWorkgroups(this.numLen);
         computePass.end();
@@ -141,8 +135,17 @@ export class ComputeDynamicOffsets extends Base {
         this.isComputed = true;
     }
 
+    static destory(): void {
+        super.destory();
+        this.workBuffer.destroy();
+        this.resultBuffer.destroy();
+        (this.input as any) = null;
+        const button = document.querySelector('#getSimpleCompute2') as HTMLButtonElement;
+        button.removeEventListener('click', this.clickEvent, false);
+    }
 
-    static setData(arr: number[], offset:number = 0) {
+
+    static setData(arr: number[], offset: number = 0) {
         this.input.set(arr, offset);
         this.device.queue.writeBuffer(this.workBuffer, 0, this.input);
         this.isComputed = false;
@@ -160,11 +163,25 @@ export class ComputeDynamicOffsets extends Base {
         }
     }
 
-    private static getRandomNums(){
+    private static getRandomNums() {
         let arr = []
-        for(let i=0;i<this.numLen;i++){
+        for (let i = 0; i < this.numLen; i++) {
             arr.push(Math.round(Math.random() * 100))
         }
         return arr
     }
+
+    private static clickEvent = (e: Event) => {
+        e.stopPropagation()
+        const resultSpan = document.querySelector('#simpleComputeResult2') as HTMLSpanElement;
+        this.setData(this.getRandomNums())
+        this.setData(this.getRandomNums(), 64)
+        this.update();
+        this.getBufferData().then((data) => {
+            console.log(data);
+            resultSpan.innerHTML = `input:<br/> a: ${data?.input.slice(0, this.numLen)} <br/> b: ${data?.input.slice(64, 64 + this.numLen)} <br/>result: ${data?.result.slice(128, 128 + this.numLen)}`
+        })
+    }
+
+
 }

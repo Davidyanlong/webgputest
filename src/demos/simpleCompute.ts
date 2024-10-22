@@ -1,9 +1,12 @@
 import { Base } from "../common/base"
 import shadercode from '../shaders/simpleCompute/simple_compute.wgsl?raw'
 
+/**
+ * 最简单的计算管线示例
+ */
 export class SimpleCompute extends Base {
     private static bindGroup: GPUBindGroup
-    private static input: Float32Array=new Float32Array(3)
+    private static input: Float32Array
     private static workBuffer: GPUBuffer
     private static resultBuffer: GPUBuffer
     private static isComputed:boolean;
@@ -11,6 +14,9 @@ export class SimpleCompute extends Base {
     static async initialize(device: GPUDevice) {
 
        await super.initialize(device)
+       
+       //参数初始化
+        this.input = new Float32Array(3)
 
         //#region  compute pipeline
         const computeModule: GPUShaderModule = device.createShaderModule({
@@ -30,32 +36,32 @@ export class SimpleCompute extends Base {
 
         // create a buffer on the GPU to hold our computation
         // input and output
-        SimpleCompute.workBuffer = device.createBuffer({
+        this.workBuffer = device.createBuffer({
             label: 'work buffer',
-            size: SimpleCompute.input.byteLength,
+            size: this.input.byteLength,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
         });
-        device.queue.writeBuffer(SimpleCompute.workBuffer, 0, SimpleCompute.input);
+        device.queue.writeBuffer(this.workBuffer, 0, this.input);
 
 
         // create a buffer on the GPU to get a copy of the results
-        SimpleCompute.resultBuffer = device.createBuffer({
+        this.resultBuffer = device.createBuffer({
             label: 'result buffer',
-            size: SimpleCompute.input.byteLength,
+            size: this.input.byteLength,
             usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
         });
 
 
         // Setup a bindGroup to tell the shader which
         // buffer to use for the computation
-        SimpleCompute.bindGroup = device.createBindGroup({
+        this.bindGroup = device.createBindGroup({
             label: 'bindGroup for work buffer',
-            layout: SimpleCompute.pipeline.getBindGroupLayout(0),
+            layout: this.pipeline.getBindGroupLayout(0),
             entries: [
                 {
                     binding: 0,
                     resource: {
-                        buffer: SimpleCompute.workBuffer
+                        buffer: this.workBuffer
                     }
                 },
             ],
@@ -65,64 +71,76 @@ export class SimpleCompute extends Base {
 
         // 测试计算管线
         const button = document.querySelector('#getSimpleCompute') as HTMLButtonElement;
-        const resultSpan = document.querySelector('#simpleComputeResult') as HTMLSpanElement;
-        button.addEventListener('click', (e)=>{
-            e.stopPropagation();
+        button.addEventListener('click', this.clickEvent, false);
 
-            SimpleCompute.setData([Math.round(Math.random()*100), Math.round(Math.random()*100), Math.round(Math.random()*100)])
-            SimpleCompute.update();
-            SimpleCompute.getBufferData().then((data)=>{
-                console.log(data);
-                resultSpan.innerHTML = `input: ${data?.input} <br/>result: ${data?.result}`
-            })
-        }, false);
-
-        SimpleCompute.isInited = true;
+        this.isInited = true;
 
     }
     static update() {
-        if (!SimpleCompute.isInited) return;
-        if(SimpleCompute.isComputed) return;
+        if (!this.isInited) return;
+        if(this.isComputed) return;
         //#region compute encode
         // Encode commands to do the computation
-        const computeEncoder = SimpleCompute.device!.createCommandEncoder({
+        const computeEncoder = this.device!.createCommandEncoder({
             label: 'doubling encoder',
         });
         const computePass = computeEncoder.beginComputePass({
             label: 'doubling compute pass',
         });
         computePass.setPipeline(this.pipeline as GPUComputePipeline);
-        computePass.setBindGroup(0, SimpleCompute.bindGroup);
-        computePass.dispatchWorkgroups(SimpleCompute.input.length);
+        computePass.setBindGroup(0, this.bindGroup);
+        computePass.dispatchWorkgroups(this.input.length);
         computePass.end();
 
         // copy data to result buffer
-        computeEncoder.copyBufferToBuffer(SimpleCompute.workBuffer, 0, SimpleCompute.resultBuffer, 0, SimpleCompute.resultBuffer.size);
+        computeEncoder.copyBufferToBuffer(this.workBuffer, 0, this.resultBuffer, 0, this.resultBuffer.size);
         const computeCommandBuffer = computeEncoder.finish();
 
 
         //#endregion
 
-        SimpleCompute.device!.queue.submit([computeCommandBuffer]);
-        SimpleCompute.isComputed =true;
+        this.device!.queue.submit([computeCommandBuffer]);
+        this.isComputed =true;
+    }
+
+    static destory(): void {
+        super.destory();
+
+        this.workBuffer?.destroy();
+        this.resultBuffer?.destroy();
+        (this.input as any) = null;
+        const button = document.querySelector('#getSimpleCompute') as HTMLButtonElement;
+        button.removeEventListener('click', this.clickEvent, false);
+
     }
 
 
     static setData(arr:number[]){
-        SimpleCompute.input = new Float32Array(arr);
-        SimpleCompute.device.queue.writeBuffer(SimpleCompute.workBuffer, 0, SimpleCompute.input);
-        SimpleCompute.isComputed = false;
+        this.input = new Float32Array(arr);
+        this.device.queue.writeBuffer(this.workBuffer, 0, this.input);
+        this.isComputed = false;
     }
 
     static async getBufferData() {
-        if (!SimpleCompute.isInited) return null;
-        await SimpleCompute.resultBuffer.mapAsync(GPUMapMode.READ);
-        const result = new Float32Array(SimpleCompute.resultBuffer.getMappedRange().slice(0));
-        SimpleCompute.resultBuffer.unmap();
+        if (!this.isInited) return null;
+        await this.resultBuffer.mapAsync(GPUMapMode.READ);
+        const result = new Float32Array(this.resultBuffer.getMappedRange().slice(0));
+        this.resultBuffer.unmap();
 
         return {
-            input: SimpleCompute.input,
+            input: this.input,
             result
         }
     }
+    private static clickEvent = (e:Event)=>{
+        e.stopPropagation();
+        const resultSpan = document.querySelector('#simpleComputeResult') as HTMLSpanElement;
+        this.setData([Math.round(Math.random()*100), Math.round(Math.random()*100), Math.round(Math.random()*100)])
+        this.update();
+        this.getBufferData().then((data)=>{
+            console.log(data);
+            resultSpan.innerHTML = `input: ${data?.input} <br/>result: ${data?.result}`
+        })
+    }
+
 }

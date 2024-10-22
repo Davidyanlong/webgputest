@@ -7,7 +7,9 @@ export class Destroy {
     public static async initialize(){
         this.initGUI();
         // 测试列表
-        this.deviceTest()
+        this.deviceTest();
+        // demo 销毁
+        this.bufferTest();
     }
     private static initGUI(){
          const parentDom = document.querySelector('#destroydom')!
@@ -42,5 +44,25 @@ export class Destroy {
 
        
     }
+    // 测试二 demo 销毁
+    private static bufferTest(){
+        const TestID= 5
+        const parmas = {
+            demoDestory:()=>{
+                // demos.forEach(demo=>{
+                //     demo.initialize(GPUContext.device)
+                // })
+                demos[TestID].destory()
+            },
+            demoReStart:()=>{
+                demos[TestID].initialize(GPUContext.device);
+            }
+            
+        }
+        let gui = this.gui.addFolder('buffer销毁')
+        gui.add(parmas,"demoDestory").name('demo销毁');
+        gui.add(parmas,"demoReStart").name('demo重新启动');
+
+    } 
 
 }

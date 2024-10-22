@@ -3,7 +3,7 @@ import shadercode from '../shaders/simpleTriangle/simple_triangle.wgsl?raw'
 
 /**
  * 渲染基本流程
- * 简单的三角形
+ * 简单的三角形,同一个GPU上下文在不同Canvas中显示
  */
 export class SimpleTriangle extends Base {
     private static context2: GPUCanvasContext
@@ -14,14 +14,11 @@ export class SimpleTriangle extends Base {
         super.initCanvas('simpleTriangle1')
         this.context2 = super.initCanvas('simpleTriangle2', true)
 
-        //#endregion
-
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'our hardcoded red triangle shaders',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -29,11 +26,9 @@ export class SimpleTriangle extends Base {
             label: 'our hardcoded red triangle pipeline',
             layout: 'auto',
             vertex: {
-                entryPoint: 'vs',
                 module,
             },
             fragment: {
-                entryPoint: 'fs',
                 module,
                 targets: [
                     { format: this.presentationFormat },
@@ -95,6 +90,17 @@ export class SimpleTriangle extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+    
+    static destory(): void {
+        /**
+         *  1. GPUShaderModule 没有显式的提供销毁方法，GPU内部会根据引用情况自动销毁
+         *  2. GPURenderPipeline 没有显示提供销毁方法，GPU内部会根据引用情况自动销毁
+         *  3. GPUCommandEncoder 没有显示提供销毁方法，GPU内部会根据引用情况自动销毁
+         *  4. GPURenderPassEncoder 没有显示提供销毁方法，GPU内部会根据引用情况自动销毁
+         */
+        super.destory();
+        this.context2?.getCurrentTexture()?.destroy()
     }
 }
 

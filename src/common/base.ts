@@ -14,6 +14,7 @@ export class Base {
     protected static observer: ResizeObserver
     protected static mo: MutationObserver
     protected static gui:any
+    protected static setting: Record<string, any>
     protected static isInited = false
 
     private static ioEvent: (e: any) => void
@@ -79,14 +80,18 @@ export class Base {
     public static update(dt: number) { dt;}
     public static draw(dt: number) { dt; }
     public static destory() {
+        this.isInited = false;
+        this.context?.getCurrentTexture()?.destroy();
+
         // 移除事件
         window.removeEventListener('scroll', this.ioEvent)
         window.removeEventListener('resize', this.ioEvent)
         
         // 停止观察
-        this.observer.disconnect();
-        this.mo.disconnect();
-        this.io.disconnect();
+        this.observer?.disconnect();
+        this.mo?.disconnect();
+        this.io?.disconnect();
+
     }
 
     public static getDepthTexture(){
@@ -184,6 +189,18 @@ export class Base {
         // 创建一个链接到回调函数的观察者实例
         this.mo ||= new MutationObserver(callback);
         return config
+    }
+
+    protected static initGUI() {
+        // @ts-ignore
+        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
+        // @ts-ignore
+        const gui = this.gui = new GUI({
+            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
+            width: '145px'
+        })
+        gui.domElement.style.top = '-300px';
+        gui.domElement.style.left = '150px';
     }
 
     

@@ -23,7 +23,6 @@ export class Checkerboard extends Base {
             label: 'checkerboard',
             code: fscode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -40,7 +39,6 @@ export class Checkerboard extends Base {
                 ],
             },
         });
-
         //#endregion
 
         //#region  渲染队列参数
@@ -81,6 +79,9 @@ export class Checkerboard extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+    static destory(): void {
+        super.destory();
     }
 }
 

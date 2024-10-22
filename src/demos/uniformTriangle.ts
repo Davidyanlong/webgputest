@@ -8,28 +8,37 @@ import { hexToRgb } from "../utils/color";
  */
 export class UniformTriangle extends Base {
     private static bindGroup: GPUBindGroup
-    private static kColorOffset = 0;
-    private static kScaleOffset = 4;
-    private static kOffsetOffset = 6;
-    private static color: [number, number, number, number] = [0, 1, 0, 1]
-    private static scale: [number, number] = [0.5, 0.5]
-    private static offset: [number, number] = [-0.5, -0.25]
+    private static kColorOffset:number
+    private static kScaleOffset:number
+    private static kOffsetOffset:number
+    private static color: [number, number, number, number]
+    private static scale: [number, number]
+    private static offset: [number, number]
     private static uniformValues: Float32Array
     private static uniformBuffer: GPUBuffer
-    private static valueChange = true
-    private static setting: Record<string, any>
+    private static valueChange:boolean
+
 
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('uniformTriangle')
 
+        // 参数初始化
+
+        this.kColorOffset = 0;
+        this.kScaleOffset = 4;
+        this.kOffsetOffset = 6;
+        this.color = [0, 1, 0, 1]
+        this.scale = [0.5, 0.5]
+        this.offset = [-0.5, -0.25]
+        this.valueChange = true;
+
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'triangle shaders with uniforms',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -48,7 +57,6 @@ export class UniformTriangle extends Base {
                 ],
             },
         });
-
         //#endregion
 
 
@@ -132,15 +140,20 @@ export class UniformTriangle extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
     static destory() {
+        super.destory();
+
+        (this.color as any) = null;
+        (this.scale as any) = null;
+        (this.offset as any) = null;
+        (this.uniformValues as any) = null;
+        this.uniformBuffer?.destroy();
 
     }
 
-    private static initGUI() {
-        // @ts-ignore
-        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
-
+    protected static initGUI() {
         if(this.gui) return;
 
+        super.initGUI();
         this.setting = {
             color: '#00ff00',
             scaleX: 1,
@@ -150,32 +163,23 @@ export class UniformTriangle extends Base {
         }
 
 
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-        gui.domElement.style.left = '150px';
-
-        this.setting
-        gui.addColor( this.setting, 'color').onChange((v:string)=>{
+        this.gui.addColor( this.setting, 'color').onChange((v:string)=>{
             this.color = [...hexToRgb(v), 1]
             this.valueChange = true;
         })
-        gui.add(this.setting,'scaleX',0.1, 2).onChange((v:number)=>{
+        this.gui.add(this.setting,'scaleX',0.1, 2).onChange((v:number)=>{
             this.scale[0] = v
             this.valueChange = true;
         })
-        gui.add(this.setting,'scaleY',0.1, 2).onChange((v:number)=>{
+        this.gui.add(this.setting,'scaleY',0.1, 2).onChange((v:number)=>{
             this.scale[1] = v
             this.valueChange = true;
         })
-        gui.add(this.setting,'offsetX',-1, 1).onChange((v:number)=>{
+        this.gui.add(this.setting,'offsetX',-1, 1).onChange((v:number)=>{
             this.offset[0] = v
             this.valueChange = true;
         })
-        gui.add(this.setting,'offsetY',-1, 1).onChange((v:number)=>{
+        this.gui.add(this.setting,'offsetY',-1, 1).onChange((v:number)=>{
             this.offset[1] = v
             this.valueChange = true;
         })

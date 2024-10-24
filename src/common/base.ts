@@ -14,7 +14,7 @@ export class Base {
     protected static observer: ResizeObserver
     protected static mo: MutationObserver
     protected static gui:any
-    protected static setting: Record<string, any>
+    protected static settings: Record<string, any>
     protected static isInited = false
 
     private static ioEvent: (e: any) => void

@@ -3,7 +3,9 @@ export class GPUContext {
   static adapter: GPUAdapter;
   private static _isLost: boolean = false
   static async initialize() {
-    const adapter = this.adapter = await navigator.gpu!.requestAdapter() as GPUAdapter;
+    const adapter = this.adapter = await navigator.gpu!.requestAdapter(
+      {powerPreference: 'high-performance'}
+    ) as GPUAdapter;
     const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
     const canTimestamp = adapter.features.has('timestamp-query');
 

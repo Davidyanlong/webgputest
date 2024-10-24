@@ -183,4 +183,4 @@ interface textureParams {
   premultipliedAlpha?:boolean
 }
 
-type sourceType = ImageBitmap | HTMLCanvasElement | HTMLVideoElement
+type sourceType = ImageBitmap | HTMLCanvasElement | HTMLVideoElement | OffscreenCanvas

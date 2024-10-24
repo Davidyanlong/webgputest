@@ -154,7 +154,7 @@ export class UniformTriangle extends Base {
         if(this.gui) return;
 
         super.initGUI();
-        this.setting = {
+        this.settings = {
             color: '#00ff00',
             scaleX: 1,
             scaleY: 1,
@@ -163,23 +163,23 @@ export class UniformTriangle extends Base {
         }
 
 
-        this.gui.addColor( this.setting, 'color').onChange((v:string)=>{
+        this.gui.addColor( this.settings, 'color').onChange((v:string)=>{
             this.color = [...hexToRgb(v), 1]
             this.valueChange = true;
         })
-        this.gui.add(this.setting,'scaleX',0.1, 2).onChange((v:number)=>{
+        this.gui.add(this.settings,'scaleX',0.1, 2).onChange((v:number)=>{
             this.scale[0] = v
             this.valueChange = true;
         })
-        this.gui.add(this.setting,'scaleY',0.1, 2).onChange((v:number)=>{
+        this.gui.add(this.settings,'scaleY',0.1, 2).onChange((v:number)=>{
             this.scale[1] = v
             this.valueChange = true;
         })
-        this.gui.add(this.setting,'offsetX',-1, 1).onChange((v:number)=>{
+        this.gui.add(this.settings,'offsetX',-1, 1).onChange((v:number)=>{
             this.offset[0] = v
             this.valueChange = true;
         })
-        this.gui.add(this.setting,'offsetY',-1, 1).onChange((v:number)=>{
+        this.gui.add(this.settings,'offsetY',-1, 1).onChange((v:number)=>{
             this.offset[1] = v
             this.valueChange = true;
         })

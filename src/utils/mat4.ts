@@ -288,20 +288,20 @@ export const mat4 = {
         return dst;
     },
 
-    aim(eye:vec3Type, target:vec3Type, up:vec3Type, dst?:Float32Array) {
+    aim(eye: vec3Type, target: vec3Type, up: vec3Type, dst?: Float32Array) {
         dst = dst || new Float32Array(16);
-     
+
         const zAxis = vec3.normalize(vec3.subtract(target, eye));
         const xAxis = vec3.normalize(vec3.cross(up, zAxis));
         const yAxis = vec3.normalize(vec3.cross(zAxis, xAxis));
-     
-        dst[ 0] = xAxis[0];  dst[ 1] = xAxis[1];  dst[ 2] = xAxis[2];  dst[ 3] = 0;
-        dst[ 4] = yAxis[0];  dst[ 5] = yAxis[1];  dst[ 6] = yAxis[2];  dst[ 7] = 0;
-        dst[ 8] = zAxis[0];  dst[ 9] = zAxis[1];  dst[10] = zAxis[2];  dst[11] = 0;
-        dst[12] = eye[0];    dst[13] = eye[1];    dst[14] = eye[2];    dst[15] = 1;
-     
+
+        dst[0] = xAxis[0]; dst[1] = xAxis[1]; dst[2] = xAxis[2]; dst[3] = 0;
+        dst[4] = yAxis[0]; dst[5] = yAxis[1]; dst[6] = yAxis[2]; dst[7] = 0;
+        dst[8] = zAxis[0]; dst[9] = zAxis[1]; dst[10] = zAxis[2]; dst[11] = 0;
+        dst[12] = eye[0]; dst[13] = eye[1]; dst[14] = eye[2]; dst[15] = 1;
+
         return dst;
-      },
+    },
 
     cameraAim(eye: vec3Type, target: vec3Type, up: vec3Type, dst?: Float32Array) {
         dst = dst || new Float32Array(16);
@@ -320,14 +320,70 @@ export const mat4 = {
     lookAt(eye: vec3Type, target: vec3Type, up: vec3Type, dst?: Float32Array) {
         return mat4.inverse(mat4.cameraAim(eye, target, up, dst), dst);
     },
-    transpose(m:Float32Array, dst?:Float32Array) {
+    transpose(m: Float32Array, dst?: Float32Array) {
         dst = dst || new Float32Array(16);
-     
-        dst[ 0] = m[ 0];  dst[ 1] = m[ 4];  dst[ 2] = m[ 8];  dst[ 3] = m[12];
-        dst[ 4] = m[ 1];  dst[ 5] = m[ 5];  dst[ 6] = m[ 9];  dst[ 7] = m[13];
-        dst[ 8] = m[ 2];  dst[ 9] = m[ 6];  dst[10] = m[10];  dst[11] = m[14];
-        dst[12] = m[ 3];  dst[13] = m[ 7];  dst[14] = m[11];  dst[15] = m[15];
-     
+
+        dst[0] = m[0]; dst[1] = m[4]; dst[2] = m[8]; dst[3] = m[12];
+        dst[4] = m[1]; dst[5] = m[5]; dst[6] = m[9]; dst[7] = m[13];
+        dst[8] = m[2]; dst[9] = m[6]; dst[10] = m[10]; dst[11] = m[14];
+        dst[12] = m[3]; dst[13] = m[7]; dst[14] = m[11]; dst[15] = m[15];
+
         return dst;
-      },
+    },
+     axisRotate(m:Float32Array, axis:vec3Type, angleInRadians:number, dst:Float32Array) {
+        const newDst = (dst ?? new Float32Array(16));
+        let x = axis[0];
+        let y = axis[1];
+        let z = axis[2];
+        const n = Math.sqrt(x * x + y * y + z * z);
+        x /= n;
+        y /= n;
+        z /= n;
+        const xx = x * x;
+        const yy = y * y;
+        const zz = z * z;
+        const c = Math.cos(angleInRadians);
+        const s = Math.sin(angleInRadians);
+        const oneMinusCosine = 1 - c;
+        const r00 = xx + (1 - xx) * c;
+        const r01 = x * y * oneMinusCosine + z * s;
+        const r02 = x * z * oneMinusCosine - y * s;
+        const r10 = x * y * oneMinusCosine - z * s;
+        const r11 = yy + (1 - yy) * c;
+        const r12 = y * z * oneMinusCosine + x * s;
+        const r20 = x * z * oneMinusCosine + y * s;
+        const r21 = y * z * oneMinusCosine - x * s;
+        const r22 = zz + (1 - zz) * c;
+        const m00 = m[0];
+        const m01 = m[1];
+        const m02 = m[2];
+        const m03 = m[3];
+        const m10 = m[4];
+        const m11 = m[5];
+        const m12 = m[6];
+        const m13 = m[7];
+        const m20 = m[8];
+        const m21 = m[9];
+        const m22 = m[10];
+        const m23 = m[11];
+        newDst[0] = r00 * m00 + r01 * m10 + r02 * m20;
+        newDst[1] = r00 * m01 + r01 * m11 + r02 * m21;
+        newDst[2] = r00 * m02 + r01 * m12 + r02 * m22;
+        newDst[3] = r00 * m03 + r01 * m13 + r02 * m23;
+        newDst[4] = r10 * m00 + r11 * m10 + r12 * m20;
+        newDst[5] = r10 * m01 + r11 * m11 + r12 * m21;
+        newDst[6] = r10 * m02 + r11 * m12 + r12 * m22;
+        newDst[7] = r10 * m03 + r11 * m13 + r12 * m23;
+        newDst[8] = r20 * m00 + r21 * m10 + r22 * m20;
+        newDst[9] = r20 * m01 + r21 * m11 + r22 * m21;
+        newDst[10] = r20 * m02 + r21 * m12 + r22 * m22;
+        newDst[11] = r20 * m03 + r21 * m13 + r22 * m23;
+        if (m !== newDst) {
+            newDst[12] = m[12];
+            newDst[13] = m[13];
+            newDst[14] = m[14];
+            newDst[15] = m[15];
+        }
+        return newDst;
+    }
 };

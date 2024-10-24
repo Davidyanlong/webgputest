@@ -93,13 +93,20 @@ export const generateMips = (src: typeArray, srcWidth: number) => {
 
 export const euclideanModulo = (x: number, a: number) => x - a * Math.floor(x / a);
 
-export type typeArray = Float32Array | Uint8Array | Int16Array | Int32Array | Uint32Array | Float64Array
+export type typeArray = Float32Array | Uint8Array | Int16Array | Int32Array | Uint32Array | Float64Array | Uint16Array
 
 export const arrayProd = (arr: typeArray | number[]) => Array.from(arr).reduce((a, b) => a * b);
 
-export const range = (i:number, fn:(...args:any[])=>number):number[] => new Array(i).fill(0).map((_, i) => fn(i));
+export const range = (i: number, fn: (...args: any[]) => number): number[] => new Array(i).fill(0).map((_, i) => fn(i));
 
-export const subpart = (view:typeArray, offset:number, length:number) => view.subarray(offset, offset + length);
+export const subpart = (view: typeArray, offset: number, length: number) => view.subarray(offset, offset + length);
+
+/** Selects a random array element */
+export const randomArrayElement = <T>(arr: T[]):T => arr[Math.random() * arr.length | 0];
+
+/** Rounds up v to a multiple of alignment */
+export const roundUp = (v: number, alignment: number) => Math.ceil(v / alignment) * alignment;
+
 
 export interface mipMapParams {
   data: typeArray,

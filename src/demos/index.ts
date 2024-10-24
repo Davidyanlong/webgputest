@@ -36,6 +36,7 @@ import { ComputeHistogram } from "./computeHistogram";
 import { ComputeVideoHistogram } from "./computeVideo";
 import { PointMarker } from './pointMarker';
 import { BigPoint } from './bigPoint'
+import { Optimization } from './optimization'
 
 // 保证案例的输出顺序
 export const demos = [
@@ -76,5 +77,6 @@ export const demos = [
     ComputeHistogram,
     ComputeVideoHistogram,
     PointMarker,
-    BigPoint
+    BigPoint,
+    Optimization
 ]

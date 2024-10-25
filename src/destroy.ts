@@ -46,7 +46,7 @@ export class Destroy {
     }
     // 测试二 demo 销毁
     private static bufferTest(){
-        const TestID= 5
+        const TestID = 14
         const parmas = {
             demoDestory:()=>{
                 // demos.forEach(demo=>{

@@ -1,4 +1,5 @@
 import { Base } from "../common/base"
+import { anyNull, GPUTextureNull } from "../common/constant";
 import shadercode from '../shaders/textureFSampler/texturef_sampler.wgsl?raw'
 
 /**
@@ -7,7 +8,7 @@ import shadercode from '../shaders/textureFSampler/texturef_sampler.wgsl?raw'
  */
 export class TextureFSampler extends Base {
     private static bindGroups: GPUBindGroup[];
-    private static settings: Record<string, string>;
+    private static texture:GPUTexture;
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
@@ -112,7 +113,7 @@ export class TextureFSampler extends Base {
         ].flat());
 
 
-        const texture = this.device.createTexture({
+        const texture = this.texture =  this.device.createTexture({
             label: 'yellow F on red',
             size: [kTextureWidth, kTextureHeight],
             format: 'rgba8unorm',
@@ -146,9 +147,10 @@ export class TextureFSampler extends Base {
         }
 
     }
-    private static initGUI() {
+    protected static initGUI() {
 
         if (this.gui) return;
+        super.initGUI();
 
         this.settings = {
             addressModeU: 'repeat',
@@ -158,16 +160,16 @@ export class TextureFSampler extends Base {
 
         const addressOptions = ['repeat', 'clamp-to-edge'];
         const filterOptions = ['nearest', 'linear'];
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
 
-        gui.add(this.settings, 'addressModeU', addressOptions);
-        gui.add(this.settings, 'addressModeV', addressOptions);
-        gui.add(this.settings, 'magFilter', filterOptions);
+        this.gui.add(this.settings, 'addressModeU', addressOptions);
+        this.gui.add(this.settings, 'addressModeV', addressOptions);
+        this.gui.add(this.settings, 'magFilter', filterOptions);
+    }
+    static destory(): void {
+        super.destory();
+        this.texture.destroy();
+        this.texture = GPUTextureNull;
+        this.bindGroups = anyNull;
     }
 }
 

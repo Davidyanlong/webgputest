@@ -50,11 +50,12 @@ export const demos = [
     StorageBufferTriangles,
     VertexBufferTriangles,
     TextureF,
-    TextureFSampler,
+    TextureFSampler, 
     TextureMipMap,
     TextureImage,
     TextureImageMipmap,
     TextureCanvasMipmap,
+    
     TextureVideoMipmap,
     TextureVideo,
     CubeTexture,

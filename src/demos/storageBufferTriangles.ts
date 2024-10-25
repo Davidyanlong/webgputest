@@ -1,4 +1,5 @@
 import { Base } from "../common/base";
+import { anyNull, Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant";
 import shadercode from '../shaders/storageBufferTriangles/storage_buffer_triangles.wgsl?raw'
 import { createCircleVertices } from "../utils/createCircleVertices";
 import { rand } from "../utils/utils";
@@ -10,12 +11,12 @@ import { rand } from "../utils/utils";
  *  storage max 128M
  */
 export class StorageBufferTriangles extends Base {
-    private static kColorOffset:number;
-    private static kScaleOffset:number;
-    private static kOffsetOffset:number;
+    private static kColorOffset: number;
+    private static kScaleOffset: number;
+    private static kOffsetOffset: number;
     private static changingUnitSize: number;
 
-    private static kNumObjects = 100;
+    private static kNumObjects: number;
     private static objectInfos: ObjectInfo[];
     private static storageValues: Float32Array;
     private static bindGroup: GPUBindGroup;
@@ -32,13 +33,13 @@ export class StorageBufferTriangles extends Base {
         this.kColorOffset = 0;
         this.kScaleOffset = 0;
         this.kOffsetOffset = 4;
+        this.kNumObjects = 100;
 
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'triangle shaders with uniforms',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -55,7 +56,6 @@ export class StorageBufferTriangles extends Base {
                 ],
             },
         });
-
         //#endregion
 
 
@@ -195,6 +195,15 @@ export class StorageBufferTriangles extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+
+    static destory(): void {
+        super.destory();
+        this.objectInfos = anyNull;
+        this.storageValues = Float32ArrayNull
+        this.bindGroup = GPUBindGroupNull
+        this.storageBuffer?.destroy();
+        this.storageBuffer = GPUBufferNull
     }
 
 }

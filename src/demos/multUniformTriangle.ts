@@ -1,4 +1,5 @@
 import { Base } from "../common/base";
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant";
 import shadercode from '../shaders/multUniformTriangle/mult_uniform_triangle.wgsl?raw'
 import { rand } from "../utils/utils";
 
@@ -7,11 +8,11 @@ import { rand } from "../utils/utils";
  * bindGroup / uniform 学习
  */
 export class MultUniformTriangle extends Base {
-    private static kColorOffset = 0;
-    private static kScaleOffset = 0;
-    private static kOffsetOffset = 4;
+    private static kColorOffset: number;
+    private static kScaleOffset: number
+    private static kOffsetOffset: number;
 
-    private static kNumObjects = 100;
+    private static kNumObjects: number;
     private static objectInfos: ObjectInfo[];
 
 
@@ -22,6 +23,11 @@ export class MultUniformTriangle extends Base {
 
         // 初始化值，尽量在初始化的时候进行，下次初始化的时候依然有效
         this.objectInfos = [];
+        this.kColorOffset = 0;
+        this.kScaleOffset = 0;
+        this.kOffsetOffset = 4;
+
+        this.kNumObjects = 100
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -46,7 +52,6 @@ export class MultUniformTriangle extends Base {
                 ],
             },
         });
-
         //#endregion
 
 
@@ -57,8 +62,6 @@ export class MultUniformTriangle extends Base {
             2 * 4;  // padding
         const uniformBufferSize =
             2 * 4;  // scale is 2 32bit floats (4bytes each)
-
-
 
         for (let i = 0; i < this.kNumObjects; ++i) {
             const staticUniformBuffer = device.createBuffer({
@@ -144,6 +147,7 @@ export class MultUniformTriangle extends Base {
         // make a render pass encoder to encode render specific commands
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
+
         // 渲染多个对象
         for (const { bindGroup } of this.objectInfos) {
             pass.setBindGroup(0, bindGroup);
@@ -154,6 +158,16 @@ export class MultUniformTriangle extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+    static destory(): void {
+        super.destory();
+        while (this.objectInfos?.length) {
+            let obj = this.objectInfos.pop()!;
+            obj.bindGroup = GPUBindGroupNull;
+            obj.uniformBuffer.destroy();
+            obj.uniformBuffer = GPUBufferNull;
+            obj.uniformValues = Float32ArrayNull;
+        }
     }
 
 }

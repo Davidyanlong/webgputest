@@ -1,4 +1,5 @@
 import { Base } from "../common/base";
+import { anyNull, Float32ArrayNull, GPUBufferNull } from "../common/constant";
 import shadercode from '../shaders/vertexBufferTriangles/vertex_buffer_triangles.wgsl?raw'
 import { createCircleVerticesIndex } from "../utils/createCircleVertices";
 import { rand } from "../utils/utils";
@@ -15,7 +16,7 @@ export class VertexBufferTriangles extends Base {
     private static kOffsetOffset: number;
     private static changingUnitSize: number;
 
-    private static kNumObjects = 100;
+    private static kNumObjects: number;
     private static changingVertexBuffer: GPUBuffer;
     private static staticVertexBuffer: GPUBuffer;
     private static vertexBuffer: GPUBuffer;
@@ -35,6 +36,7 @@ export class VertexBufferTriangles extends Base {
         this.kColorOffset = 0;
         this.kScaleOffset = 0;
         this.kOffsetOffset = 1;
+        this.kNumObjects = 100;
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -232,7 +234,16 @@ export class VertexBufferTriangles extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+    static destory(): void {
+        super.destory();
 
+        this.changingVertexBuffer?.destroy();
+        this.staticVertexBuffer?.destroy();
+        this.changingVertexBuffer = GPUBufferNull;
+        this.staticVertexBuffer = GPUBufferNull;
+        this.vertexValues = Float32ArrayNull;
+        this.objectInfos = anyNull;
+    }
 
 
 

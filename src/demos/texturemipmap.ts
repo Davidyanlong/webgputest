@@ -4,6 +4,7 @@ import { typeArray } from "../utils/utils"
 import { createBlendedMipmap } from "../utils/createBlendedMipmap"
 import { createCheckedMipmap } from "../utils/createCheckedMipmap"
 import { mat4 } from 'wgpu-matrix'
+import { anyNull, Float32ArrayNull, GPUBufferNull } from "../common/constant"
 
 /**
  * 渲染基本流程
@@ -21,6 +22,7 @@ export class TextureMipMap extends Base {
 
         // 初始化值
         this.objectInfos = [];
+        this.textures = [];
         this.texNdx = 0;
 
         //#region  shaderModule
@@ -28,7 +30,6 @@ export class TextureMipMap extends Base {
             label: 'our hardcoded textured quad shaders',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -45,7 +46,6 @@ export class TextureMipMap extends Base {
                 ],
             },
         });
-
         //#endregion
 
         this.initTexture()
@@ -138,6 +138,25 @@ export class TextureMipMap extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
+    static destory(): void {
+        super.destory();
+        let texure,objectInfo;
+        while(texure = this.textures?.pop()){
+            texure.destroy();
+        }
+        this.textures = anyNull;
+        while(objectInfo = this.objectInfos?.pop()){
+            objectInfo.bindGroups = anyNull
+            objectInfo.matrix = Float32ArrayNull
+            objectInfo.uniformBuffer?.destroy();
+            objectInfo.uniformBuffer = GPUBufferNull;
+            objectInfo.uniformValues = Float32ArrayNull
+        }
+        this.objectInfos = anyNull;
+        this.viewProjectionMatrix = Float32ArrayNull;
+
+    }
+
     private static initTexture() {
         this.textures = [
             this.createTextureWithMips(createBlendedMipmap(), 'blended'),
@@ -211,6 +230,7 @@ export class TextureMipMap extends Base {
         });
         return texture;
     };
+
 }
 
 // 内部类型

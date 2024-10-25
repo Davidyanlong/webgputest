@@ -1,7 +1,8 @@
 import { Base } from "../common/base"
 import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?raw'
 import { GenerateMips } from "../common/generateMips"
-import { mat4 } from "wgpu-matrix"
+import { mat4 } from "../utils/mat4"
+import { anyNull, Float32ArrayNull, GPUBufferNull } from "../common/constant";
 
 /**
  * 渲染基本流程
@@ -19,6 +20,7 @@ export class TextureImageMipmap extends Base {
 
         // 初始化值
         this.objectInfos = [];
+        this.textures = [];
         this.texNdx = 0;
 
         //#region  shaderModule
@@ -47,8 +49,6 @@ export class TextureImageMipmap extends Base {
         //#endregion
 
         await this.initTexture()
-
-        this.context.canvas.removeEventListener('click', this.clickEvent)
         this.context.canvas.addEventListener('click', this.clickEvent);
 
 
@@ -74,9 +74,9 @@ export class TextureImageMipmap extends Base {
         const zFar = 2000;
         const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
 
-        const cameraPosition = [0, 0, 2];
-        const up = [0, 1, 0];
-        const target = [0, 0, 0];
+        const cameraPosition = new Float32Array([0, 0, 2]);
+        const up = new Float32Array([0, 1, 0]);
+        const target = new Float32Array([0, 0, 0]);
         const viewMatrix = mat4.lookAt(cameraPosition, target, up);
         this.viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
         this.isInited = true;
@@ -146,6 +146,27 @@ export class TextureImageMipmap extends Base {
 
 
     }
+
+    static destory(): void {
+        this.context?.canvas?.removeEventListener('click', this.clickEvent)
+        super.destory();
+        let objInfo,texture;
+        while(objInfo = this.objectInfos?.pop()){
+            objInfo.bindGroups = anyNull;
+            objInfo.matrix = Float32ArrayNull;
+            objInfo.uniformValues = Float32ArrayNull;
+            objInfo.uniformBuffer?.destroy();
+            objInfo.uniformBuffer = GPUBufferNull;
+        }
+        this.viewProjectionMatrix = Float32ArrayNull;
+        while(texture = this.textures?.pop()){
+            texture.destroy();
+        }
+        this.textures = anyNull;
+
+
+    }
+
     private static async initTexture() {
         this.textures = await Promise.all([
             await GenerateMips.createTextureFromImage(this.device,

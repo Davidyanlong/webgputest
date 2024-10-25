@@ -1,9 +1,5 @@
-import { GenerateMips } from "../common/generateMips";
-
-
-
-const hsl = (h:number, s:number, l:number) => `hsl(${h * 360 | 0}, ${s * 100}%, ${l * 100 | 0}%)`;
-
+import { CanvasRenderingContext2DNull } from "../common/constant";
+import { hsl } from "./color";
 export class CanvasAnimationTexture {
     size: number = 256
     half: number = 0
@@ -28,6 +24,10 @@ export class CanvasAnimationTexture {
             this.ctx.translate(this.size / 16, 0);
         }
         this.ctx.restore();
+    }
+
+    destory(){
+        this.ctx = CanvasRenderingContext2DNull
     }
 
 }

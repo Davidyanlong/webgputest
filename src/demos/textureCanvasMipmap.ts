@@ -1,16 +1,17 @@
 import { Base } from "../common/base"
 import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?raw'
 import { GenerateMips } from "../common/generateMips"
-import { mat4 } from "wgpu-matrix"
+import { mat4 } from "../utils/mat4"
 import { CanvasAnimationTexture } from "../utils/createCanvasTexture"
+import { anyNull, Float32ArrayNull, GPUBufferNull, GPUTextureNull } from "../common/constant"
 
 /**
  * 渲染基本流程
  * 简单的三角形
  */
 export class TextureCanvasMipmap extends Base {
-    private static objectInfos: objectInfoInterface[] = []
-    private static texNdx = 0;
+    private static objectInfos: objectInfoInterface[];
+    private static texNdx:number;
     private static viewProjectionMatrix: Float32Array
     private static canvasAnimationTexture: CanvasAnimationTexture
     private static texture: GPUTexture
@@ -21,6 +22,7 @@ export class TextureCanvasMipmap extends Base {
         
         //初始化参数
         this.objectInfos = [];
+        this.texNdx = 0;
 
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
@@ -41,7 +43,6 @@ export class TextureCanvasMipmap extends Base {
                 ],
             },
         });
-
         //#endregion
 
         await this.initTexture()
@@ -70,9 +71,9 @@ export class TextureCanvasMipmap extends Base {
         const zFar = 2000;
         const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
 
-        const cameraPosition = [0, 0, 2];
-        const up = [0, 1, 0];
-        const target = [0, 0, 0];
+        const cameraPosition = new Float32Array([0, 0, 2]);
+        const up = new Float32Array([0, 1, 0]);
+        const target = new Float32Array([0, 0, 0]);
         const viewMatrix = mat4.lookAt(cameraPosition, target, up);
         this.viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
 
@@ -132,6 +133,28 @@ export class TextureCanvasMipmap extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+
+    static destory(): void {
+        super.destory();
+        this.canvasAnimationTexture?.destory();
+        this.canvasAnimationTexture = anyNull;
+        let objectInfo;
+        while(objectInfo = this.objectInfos?.pop()){
+            objectInfo.bindGroups = anyNull;
+            objectInfo.matrix = Float32ArrayNull;
+            objectInfo.uniformValues = Float32ArrayNull;
+            objectInfo.uniformBuffer.destroy();
+            objectInfo.uniformBuffer = GPUBufferNull
+        }
+
+        this.objectInfos = anyNull;
+        this.viewProjectionMatrix = Float32ArrayNull;
+
+
+        this.texture.destroy();
+        this.texture = GPUTextureNull;
+
     }
 
     private static async initTexture() {

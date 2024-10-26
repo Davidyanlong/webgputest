@@ -95,9 +95,9 @@ export class TextureImage extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    static destory(): void {
-        super.destory();
-        this.texture.destroy();
+    static destroy(): void {
+        super.destroy();
+        this.texture?.destroy();
         this.texture = GPUTextureNull;
         this.bindGroups = anyNull;
     }

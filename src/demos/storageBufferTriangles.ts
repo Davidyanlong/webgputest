@@ -197,8 +197,8 @@ export class StorageBufferTriangles extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
         this.objectInfos = anyNull;
         this.storageValues = Float32ArrayNull
         this.bindGroup = GPUBindGroupNull

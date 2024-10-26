@@ -80,8 +80,8 @@ export class Checkerboard extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
     }
 }
 

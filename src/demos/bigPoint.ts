@@ -1,4 +1,5 @@
 import { Base } from "../common/base"
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant";
 import shadercode from '../shaders/bigPoint/bigPoint.wgsl?raw'
 import { createFibonacciSphereVertices } from "../utils/createFibonacciSphereVertices";
 import { mat4 } from "../utils/mat4";
@@ -14,9 +15,9 @@ export class BigPoint extends Base {
     private static uniformValues: Float32Array
     private static bindGroup: GPUBindGroup
     private static vertexBuffer: GPUBuffer
-    private static matrixValue:Float32Array
-    private static sizeValue:Float32Array
-    
+    private static matrixValue: Float32Array
+    private static sizeValue: Float32Array
+
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
@@ -73,30 +74,30 @@ export class BigPoint extends Base {
         //#endregion
         this.isInited = true;
     }
-    static update(dt:number): void {
-       const time =dt *  0.001;
+    static update(dt: number): void {
+        const time = dt * 0.001;
         if (!this.isInited) return;
         const canvas = this.context.canvas as HTMLCanvasElement
-      // Set the size in the uniform values
-    this.sizeValue[0] = 10;
+        // Set the size in the uniform values
+        this.sizeValue[0] = 10;
 
-    const fov = 90 * Math.PI / 180;
-    const aspect = canvas.clientWidth / canvas.clientHeight;
-    const projection = mat4.perspective(fov, aspect, 0.1, 50);
-    const view = mat4.lookAt(
-      new Float32Array([0, 0, 1.5]),  // position
-      new Float32Array([0, 0, 0]),    // target
-      new Float32Array([0, 1, 0]),    // up
-    );
-    const viewProjection = mat4.multiply(projection, view);
-    mat4.rotateY(viewProjection, time, this.matrixValue);
-    mat4.rotateX(this.matrixValue, time * 0.1, this.matrixValue);
+        const fov = 90 * Math.PI / 180;
+        const aspect = canvas.clientWidth / canvas.clientHeight;
+        const projection = mat4.perspective(fov, aspect, 0.1, 50);
+        const view = mat4.lookAt(
+            new Float32Array([0, 0, 1.5]),  // position
+            new Float32Array([0, 0, 0]),    // target
+            new Float32Array([0, 1, 0]),    // up
+        );
+        const viewProjection = mat4.multiply(projection, view);
+        mat4.rotateY(viewProjection, time, this.matrixValue);
+        mat4.rotateX(this.matrixValue, time * 0.1, this.matrixValue);
 
-    // Update the resolution in the uniform values
-    this.resolutionValue.set([canvas.width, canvas.height]);
+        // Update the resolution in the uniform values
+        this.resolutionValue.set([canvas.width, canvas.height]);
 
-    // Copy the uniform values to the GPU
-    this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
+        // Copy the uniform values to the GPU
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
 
     }
 
@@ -126,6 +127,23 @@ export class BigPoint extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
+    static destroy(): void {
+        super.destroy();
+
+        this.resolutionValue = Float32ArrayNull
+
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull;
+
+        this.uniformValues = Float32ArrayNull;
+        this.bindGroup = GPUBindGroupNull;
+
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull;
+        this.matrixValue = Float32ArrayNull
+        this.sizeValue = Float32ArrayNull
+    }
+
 
     private static initVertex() {
 
@@ -133,10 +151,10 @@ export class BigPoint extends Base {
         const vertexData = createFibonacciSphereVertices({
             radius: 1,
             numSamples: 500,
-          });
-          this.kNumPoints = vertexData.length / 3;
+        });
+        this.kNumPoints = vertexData.length / 3;
 
-       
+
         const vertexBuffer = this.vertexBuffer = this.device.createBuffer({
             label: 'vertex buffer vertices',
             size: vertexData.byteLength,
@@ -145,7 +163,7 @@ export class BigPoint extends Base {
         this.device.queue.writeBuffer(vertexBuffer, 0, vertexData);
 
         // Uniform 数据
-        const uniformValues = this.uniformValues= new Float32Array(16 + 2 + 1 + 1);
+        const uniformValues = this.uniformValues = new Float32Array(16 + 2 + 1 + 1);
         const uniformBuffer = this.uniformBuffer = this.device.createBuffer({
             size: uniformValues.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -160,7 +178,7 @@ export class BigPoint extends Base {
             kResolutionOffset, kResolutionOffset + 2);
         this.sizeValue = uniformValues.subarray(
             kSizeOffset, kSizeOffset + 1);
-      
+
         this.bindGroup = this.device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(0),
             entries: [

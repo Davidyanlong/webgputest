@@ -4,6 +4,7 @@ import { GenerateMips } from "../common/generateMips"
 import shadercode from '../shaders/environmentMap/environmentMap.wgsl?raw'
 import skyShaderCode from '../shaders/skybox/skybox.wgsl?raw'
 import { createCubeVerticesAndNormal } from '../utils/cube'
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull, GPURenderPipelineNull, GPUTextureNull } from "../common/constant"
 
 /**
  * 渲染基本流程
@@ -28,6 +29,7 @@ export class Skybox extends Base {
     private static skyBoxUniformValues: Float32Array
     private static skyBoxBindGroup: GPUBindGroup
     private static skyBoxUniformBuffer: GPUBuffer
+    private static texture: GPUTexture
 
     static async initialize(device: GPUDevice) {
 
@@ -258,8 +260,35 @@ export class Skybox extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
+    static destroy(): void {
+        super.destroy();
+        this.bindGroup = GPUBindGroupNull
+        this.vertexBuffer?.destroy()
+        this.vertexBuffer = GPUBufferNull
+        this.indexBuffer?.destroy();
+        this.indexBuffer = GPUBufferNull
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull;
+        this.uniformValues = Float32ArrayNull
+
+        this.projectionValue = Float32ArrayNull
+        this.viewValue = Float32ArrayNull
+        this.worldValue = Float32ArrayNull
+        this.cameraPositionValue = Float32ArrayNull
+
+        // skybox
+        this.skyBoxPipeline = GPURenderPipelineNull
+        this.viewDirectionProjectionInverseValue = Float32ArrayNull
+        this.skyBoxUniformValues = Float32ArrayNull
+        this.skyBoxBindGroup = GPUBindGroupNull
+        this.skyBoxUniformBuffer?.destroy();
+        this.skyBoxUniformBuffer = GPUBufferNull
+        this.texture?.destroy();
+        this.texture = GPUTextureNull
+    }
+
     private static async initTexture() {
-        const texture = await GenerateMips.createTextureFromImages(
+        const texture = this.texture = await GenerateMips.createTextureFromImages(
             this.device,
             [
                 '/cube/leadenhall_market/pos-x.jpg',

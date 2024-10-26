@@ -3,15 +3,15 @@ import { Base } from "../common/base"
 import { GenerateMips } from "../common/generateMips"
 import shadercode from '../shaders/blend/blend.wgsl?raw'
 import { hsl, hsla } from "../utils/color"
+import { anyNull, GPUBindGroupLayoutNull, GPUBindGroupNull, GPUPipelineLayoutNull, GPURenderPipelineNull, GPUShaderModuleNull, GPUTextureNull } from "../common/constant"
 
 /**
  * Blend 理解
  */
 export class Blend extends Base {
     private static bindGroupLayout: GPUBindGroupLayout
-    private static settings: Record<string, any>
     private static dstPipeline: GPURenderPipeline
-    private static textureSets: Record<string, any>
+    private static textureSets: BlendTexuteObj[]
     private static srcUniform: uniformType
     private static dstUniform: uniformType
     private static module: GPUShaderModule
@@ -102,13 +102,6 @@ export class Blend extends Base {
         };
         //#endregion
 
-
-        this.settings = {
-            alphaMode: 'premultiplied',
-            textureSet: 0,
-            preset: 'default (copy)',
-        };
-
         this.initGUI();
 
         this.isInited = true;
@@ -194,6 +187,28 @@ export class Blend extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+
+    static destroy(): void {
+        super.destroy();
+        this.bindGroupLayout = GPUBindGroupLayoutNull
+        this.dstPipeline = GPURenderPipelineNull
+        let obj;
+        while (obj = this.textureSets?.pop()) {
+            obj.srcTexture?.destroy();
+            obj.srcTexture = GPUTextureNull
+            obj.dstTexture?.destroy();
+            obj.dstTexture = GPUTextureNull
+            obj.srcBindGroup = GPUBindGroupNull
+            obj.dstBindGroup = GPUBindGroupNull
+        }
+        this.textureSets = anyNull;
+
+        this.srcUniform = anyNull;
+        this.dstUniform = anyNull;
+        this.module = GPUShaderModuleNull
+        this.pipelineLayout = GPUPipelineLayoutNull
+    }
+
     private static initTexture() {
         const size = 300;
         const srcCanvas = createSourceImage(size);
@@ -275,15 +290,15 @@ export class Blend extends Base {
         }
     }
 
-    private static initGUI() {
-        if(this.gui) return;
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
+    protected static initGUI() {
+        if (this.gui) return;
+        super.initGUI();
 
+        this.settings = {
+            alphaMode: 'premultiplied',
+            textureSet: 0,
+            preset: 'default (copy)',
+        };
 
         const presets = {
             'default (copy)': {
@@ -364,20 +379,16 @@ export class Blend extends Base {
                 },
             },
         };
-
-
-
-
-        gui.add(this.settings, 'alphaMode', ['opaque', 'premultiplied']).name('canvas alphaMode');
-        gui.add(this.settings, 'textureSet', ['premultiplied alpha', 'un-premultiplied alpha']);
-        gui.add(this.settings, 'preset', Object.keys(presets))
+        this.gui.add(this.settings, 'alphaMode', ['opaque', 'premultiplied']).name('canvas alphaMode');
+        this.gui.add(this.settings, 'textureSet', ['premultiplied alpha', 'un-premultiplied alpha']);
+        this.gui.add(this.settings, 'preset', Object.keys(presets))
             .name('blending preset')
             .onChange((presetName: keyof typeof presets) => {
                 const preset = presets[presetName];
                 Object.assign(color, preset.color);
                 // @ts-ignore
                 Object.assign(alpha, preset.alpha || preset.color);
-                gui.updateDisplay();
+                this.gui.updateDisplay();
             });
     }
 }
@@ -489,6 +500,13 @@ interface uniformType {
     buffer: GPUBuffer;
     values: Float32Array;
     matrix: Float32Array;
+}
+
+interface BlendTexuteObj {
+    srcTexture: GPUTexture
+    dstTexture: GPUTexture
+    srcBindGroup: GPUBindGroup
+    dstBindGroup: GPUBindGroup
 }
 
 const color: GPUBlendComponent = {

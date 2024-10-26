@@ -1,4 +1,5 @@
 import { Base } from "../common/base";
+import { anyNull, Float32ArrayNull, GPUBufferNull } from "../common/constant";
 import { GPUContext } from "../common/gpuContext";
 import shadercode from '../shaders/vertexBufferTriangles/vertex_buffer_triangles.wgsl?raw'
 import { createCircleVerticesColor } from "../utils/createCircleVertices";
@@ -10,31 +11,37 @@ import { euclideanModulo, rand } from "../utils/utils";
  * TimestampQuery
  */
 export class TimestampQuery extends Base {
-    private static kColorOffset = 0;
-    private static kScaleOffset = 2;
-    private static kOffsetOffset = 0;
+    private static kColorOffset: number;
+    private static kScaleOffset: number;
+    private static kOffsetOffset: number;
     private static changingUnitSize: number;
 
-    private static kNumObjects = 10000;
+    private static kNumObjects: number;
     private static changingVertexBuffer: GPUBuffer;
     private static staticVertexBuffer: GPUBuffer;
     private static vertexBuffer: GPUBuffer;
     private static vertexValues: Float32Array;
     private static numVertices: number;
-    private static objectInfos: objectInfosType[] = [];
+    private static objectInfos: objectInfosType[];
     private static timingHelper: TimingHelper;
-    private static settings: Record<string, number>
     private static then: number = 0
     private static fpsAverage: RollingAverage
     private static jsAverage: RollingAverage
     private static gpuAverage: RollingAverage
-    private static infoElem:HTMLDivElement
-    private static canTimestamp:boolean
+    private static infoElem: HTMLDivElement
+    private static canTimestamp: boolean
 
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('timestampQuery')
+
+        // 参数初始化
+        this.kColorOffset = 0;
+        this.kScaleOffset = 2;
+        this.kOffsetOffset = 0;
+        this.kNumObjects = 10000;
+        this.objectInfos = [];
 
         this.timingHelper = new TimingHelper(device);
 
@@ -42,14 +49,11 @@ export class TimestampQuery extends Base {
         this.jsAverage = new RollingAverage();
         this.gpuAverage = new RollingAverage();
 
-
-
         //#region  shaderModule
         const module = device.createShaderModule({
             label: 'triangle shaders with uniforms',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -142,18 +146,18 @@ export class TimestampQuery extends Base {
             const staticVertexValuesU8 = new Uint8Array(staticVertexBufferSize);
             for (let i = 0; i < this.kNumObjects; ++i) {
                 const staticOffsetU8 = i * staticUnitSize;
-          
+
                 // These are only set once so set them now
                 staticVertexValuesU8.set(        // set the color
                     [rand() * 255, rand() * 255, rand() * 255, 255],
                     staticOffsetU8 + this.kColorOffset);
-          
+
                 this.objectInfos.push({
-                  scale: rand(0.2, 0.5),
-                  offset: [rand(-0.9, 0.9), rand(-0.9, 0.9)],
-                  velocity: [rand(-0.1, 0.1), rand(-0.1, 0.1)],
+                    scale: rand(0.2, 0.5),
+                    offset: [rand(-0.9, 0.9), rand(-0.9, 0.9)],
+                    velocity: [rand(-0.1, 0.1), rand(-0.1, 0.1)],
                 });
-              }
+            }
             device.queue.writeBuffer(this.staticVertexBuffer, 0, staticVertexValuesU8);
         }
 
@@ -196,11 +200,11 @@ export class TimestampQuery extends Base {
     static update(dt: number): void {
         let now = dt * 0.001;
         const deltaTime = now - this.then;
-        
-      
+
+
         if (!this.isInited) return;
-          // 渲染多个对象
-          for (let ndx = 0; ndx < this.settings.numObjects; ++ndx) {
+        // 渲染多个对象
+        for (let ndx = 0; ndx < this.settings.numObjects; ++ndx) {
             const { scale, offset, velocity } = this.objectInfos[ndx];
             // -1.5 to 1.5
             offset[0] = euclideanModulo(offset[0] + velocity[0] * deltaTime + 1.5, 3) - 1.5;
@@ -234,12 +238,12 @@ export class TimestampQuery extends Base {
         });
 
         // make a render pass encoder to encode render specific commands
-        const pass = this.timingHelper.beginRenderPass(encoder, this.renderPassDescriptor) as GPURenderPassEncoder ;
+        const pass = this.timingHelper.beginRenderPass(encoder, this.renderPassDescriptor) as GPURenderPassEncoder;
         pass.setPipeline(this.pipeline as GPURenderPipeline);
-        
+
         pass.setVertexBuffer(0, this.vertexBuffer);
         pass.setVertexBuffer(1, this.staticVertexBuffer);
-        pass.setVertexBuffer(2, this.changingVertexBuffer);     
+        pass.setVertexBuffer(2, this.changingVertexBuffer);
 
         pass.draw(this.numVertices, this.settings.numObjects);  // call our vertex shader 3 times
         pass.end();
@@ -255,44 +259,68 @@ export class TimestampQuery extends Base {
         });
 
         const jsTime = performance.now() - startTime;
-        if(this.then!=0){
+        if (this.then != 0) {
             this.fpsAverage.addSample(1 / deltaTime);
         }
-       
+
         this.jsAverage.addSample(jsTime);
         this.stat();
         this.then = now;
     }
 
-    private static initGUI() {
-        if(this.gui) return;
+    static destroy(): void {
+        this.canTimestamp = false;
+        super.destroy();
+        this.changingVertexBuffer = GPUBufferNull;
+        this.staticVertexBuffer?.destroy();
+        this.staticVertexBuffer = GPUBufferNull;
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull;
+        this.vertexValues = Float32ArrayNull
+
+        let objInfo;
+        while (objInfo = this.objectInfos?.pop()) {
+            objInfo.offset = anyNull
+            objInfo.scale = anyNull
+            objInfo.velocity = anyNull
+        }
+        this.objectInfos = anyNull;
+
+        this.timingHelper?.destroy();
+        this.timingHelper = anyNull;
+        this.fpsAverage?.destroy();
+        this.fpsAverage = anyNull;
+        this.jsAverage?.destroy();
+        this.jsAverage = anyNull;
+        this.gpuAverage?.destroy();
+        this.gpuAverage = anyNull;
+
+
+    }
+
+    protected static initGUI() {
+        if (this.gui) return;
+        super.initGUI();
 
 
         this.settings = {
             numObjects: 100,
         }
-
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-        gui.domElement.style.left = '150px';
-        gui.add(this.settings, 'numObjects', 0, this.kNumObjects, 1);
+        this.gui.domElement.style.left = '150px';
+        this.gui.add(this.settings, 'numObjects', 0, this.kNumObjects, 1);
 
     }
 
-    private static statInit(){
-        this.canTimestamp =  GPUContext.adapter.features.has('timestamp-query');
+    private static statInit() {
+        this.canTimestamp = GPUContext.adapter.features.has('timestamp-query');
         const parent = (this.context.canvas as HTMLCanvasElement).parentElement
         let infoElem = parent!.querySelector('#statElement') as HTMLDivElement
-        if(infoElem){
-            infoElem.innerHTML=''
+        if (infoElem) {
+            infoElem.innerHTML = ''
             parent?.removeChild(infoElem)
         }
-        infoElem = this.infoElem =  document.createElement('div')
-        infoElem.id='statElement';
+        infoElem = this.infoElem = document.createElement('div')
+        infoElem.id = 'statElement';
         infoElem.style.cssText = ` 
             position: relative;
             top: -350px;
@@ -305,7 +333,7 @@ export class TimestampQuery extends Base {
             `
         parent?.appendChild(infoElem);
     }
-    private static stat(){
+    private static stat() {
         this.infoElem.innerText = `\
             fps: ${this.fpsAverage.get().toFixed(1)}
             js: ${this.jsAverage.get().toFixed(1)}ms

@@ -92,14 +92,14 @@ export class SimpleTriangle extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
     
-    static destory(): void {
+    static destroy(): void {
         /**
          *  1. GPUShaderModule 没有显式的提供销毁方法，GPU内部会根据引用情况自动销毁
          *  2. GPURenderPipeline 没有显示提供销毁方法，GPU内部会根据引用情况自动销毁
          *  3. GPUCommandEncoder 没有显示提供销毁方法，GPU内部会根据引用情况自动销毁
          *  4. GPURenderPassEncoder 没有显示提供销毁方法，GPU内部会根据引用情况自动销毁
          */
-        super.destory();
+        super.destroy();
         this.context2?.getCurrentTexture()?.destroy()
     }
 }

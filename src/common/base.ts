@@ -1,3 +1,5 @@
+import { initGUI } from "../utils/gui";
+import { anyNull, GPURenderPassDescriptorNull, GPURenderPipelineNull, GPUTextureFormatNull, GPUTextureNull } from "./constant";
 import { GPUContext } from "./gpuContext";
 
 export class Base {
@@ -6,14 +8,14 @@ export class Base {
     protected static pipeline: GPURenderPipeline | GPUComputePipeline
     protected static device: GPUDevice
     protected static context: GPUCanvasContext
-    protected static depthTexture:GPUTexture | null
+    protected static depthTexture: GPUTexture | null
     protected static renderPassDescriptor: GPURenderPassDescriptor
     protected static aspect = 1;
     protected static presentationFormat: GPUTextureFormat
     protected static io: IntersectionObserver
     protected static observer: ResizeObserver
     protected static mo: MutationObserver
-    protected static gui:any
+    protected static gui: any
     protected static settings: Record<string, any>
     protected static isInited = false
 
@@ -28,8 +30,8 @@ export class Base {
 
         // 是否能够找到该ID的DOM对象
         let canvas = document.querySelector(`#${canvasId}`) as HTMLCanvasElement
-        if(!canvas){
-           canvas =  this.createDom(canvasId, parentDom)  as HTMLCanvasElement;
+        if (!canvas) {
+            canvas = this.createDom(canvasId, parentDom) as HTMLCanvasElement;
         }
 
         const context = canvas!.getContext('webgpu')!;
@@ -62,7 +64,7 @@ export class Base {
 
         // dom是否发生属性等变化监听
         const config = this.initMO();
-        
+
         // 开始观察已配置突变的目标节点
         this.mo.observe(canvas, config);
 
@@ -77,30 +79,37 @@ export class Base {
         return context;
 
     }
-    public static update(dt: number) { dt;}
+    public static update(dt: number) { dt; }
     public static draw(dt: number) { dt; }
-    public static destory() {
+    public static destroy() {
         this.isInited = false;
+        this.actived = false;
         this.context?.getCurrentTexture()?.destroy();
-
+        this.context = anyNull;
         // 移除事件
         window.removeEventListener('scroll', this.ioEvent)
         window.removeEventListener('resize', this.ioEvent)
-        
+
         // 停止观察
         this.observer?.disconnect();
         this.mo?.disconnect();
         this.io?.disconnect();
 
+        this.pipeline = GPURenderPipelineNull
+        this.renderPassDescriptor = GPURenderPassDescriptorNull
+        this.presentationFormat = GPUTextureFormatNull
+        // 断开引用
+        this.device = anyNull
+
     }
 
-    public static getDepthTexture(){
-         // 这段代码正常应该存放到resize 代码中
+    public static getDepthTexture() {
+        // 这段代码正常应该存放到resize 代码中
 
-         const canvasTexture = this.context.getCurrentTexture();
-         const textureWidth = canvasTexture.width 
-         const textureHeight = canvasTexture.height
-         if (!this.depthTexture ||
+        const canvasTexture = this.context.getCurrentTexture();
+        const textureWidth = canvasTexture.width
+        const textureHeight = canvasTexture.height
+        if (!this.depthTexture ||
             this.depthTexture.width !== textureWidth ||
             this.depthTexture.height !== textureHeight) {
             if (this.depthTexture) {
@@ -172,9 +181,9 @@ export class Base {
         // 观察者的选项(要观察哪些突变)
         var config = { attributes: true, childList: false, subtree: false };// 只监听属性发生变化
         // 当观察到突变时执行的回调函数
-        var callback =  (mutationsList:MutationRecord[])=> {
+        var callback = (mutationsList: MutationRecord[]) => {
             // console.log(mutationsList, 'mutationsList');
-            mutationsList.forEach( (item:MutationRecord) =>{
+            mutationsList.forEach((item: MutationRecord) => {
                 if (item.type == 'childList') {
                     // console.log('有节点发生改变');
                 } else if (item.type == 'attributes') {
@@ -192,17 +201,9 @@ export class Base {
     }
 
     protected static initGUI() {
-        // @ts-ignore
-        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-        gui.domElement.style.left = '150px';
+        this.gui = initGUI((this.context.canvas as HTMLCanvasElement).parentElement as HTMLElement);
     }
 
-    
+
 
 }

@@ -1,18 +1,18 @@
 
 import { Base } from "../common/base"
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/directionalLight/directionalLight.wgsl?raw'
 import { createFVerticesNormal } from "../utils/createF"
+import { radToDegOptions } from "../utils/gui"
 import { mat3 } from "../utils/mat3"
 import { mat4 } from "../utils/mat4"
 import { degToRad } from "../utils/utils"
 import { vec3 } from "../utils/vec3"
 
 /**
- * 正交投影
+ * 直射灯
  */
 export class DirectionalLight extends Base {
-    public static radius: number = 200;
-    private static settings: Record<string, any>
     private static vertexBuffer: GPUBuffer
     private static numVertices: number
 
@@ -27,7 +27,7 @@ export class DirectionalLight extends Base {
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
-        super.initCanvas('directionalLight')
+        super.initCanvas('directionalLight');
 
         this.context.configure({
             device: this.device,
@@ -41,7 +41,6 @@ export class DirectionalLight extends Base {
             label: 'orthogonal shader module',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -75,7 +74,6 @@ export class DirectionalLight extends Base {
                 format: 'depth24plus',
             },
         });
-
         //#endregion
 
 
@@ -215,27 +213,30 @@ export class DirectionalLight extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    private static initGUI() {
-        if(this.gui) return;
+    static destroy(): void {
+        super.destroy();
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull;
+        this.bindGroup = GPUBindGroupNull;
+        this.worldViewProjectionValue = Float32ArrayNull
+        this.normalMatrixValue = Float32ArrayNull
+        this.colorValue = Float32ArrayNull
+        this.lightDirectionValue = Float32ArrayNull
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull
+        this.uniformValues = Float32ArrayNull
 
-        
+    }
+
+    protected static initGUI() {
+        if (this.gui) return;
+
+        super.initGUI();
+
         this.settings = {
             rotation: degToRad(0),
         };
 
-
-        // @ts-ignore
-        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
-
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-        gui.domElement.style.left = '150px';
-
-        // @ts-ignore
-        gui.add(this.settings, 'rotation', radToDegOptions);
+        this.gui.add(this.settings, 'rotation', radToDegOptions);
     }
 }

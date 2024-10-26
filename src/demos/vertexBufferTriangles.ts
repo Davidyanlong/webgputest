@@ -234,8 +234,8 @@ export class VertexBufferTriangles extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
 
         this.changingVertexBuffer?.destroy();
         this.staticVertexBuffer?.destroy();

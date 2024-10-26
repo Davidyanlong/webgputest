@@ -159,8 +159,8 @@ export class MultUniformTriangle extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
         while (this.objectInfos?.length) {
             let obj = this.objectInfos.pop()!;
             obj.bindGroup = GPUBindGroupNull;

@@ -135,16 +135,16 @@ export class TextureCanvasMipmap extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    static destory(): void {
-        super.destory();
-        this.canvasAnimationTexture?.destory();
+    static destroy(): void {
+        super.destroy();
+        this.canvasAnimationTexture?.destroy();
         this.canvasAnimationTexture = anyNull;
         let objectInfo;
         while(objectInfo = this.objectInfos?.pop()){
             objectInfo.bindGroups = anyNull;
             objectInfo.matrix = Float32ArrayNull;
             objectInfo.uniformValues = Float32ArrayNull;
-            objectInfo.uniformBuffer.destroy();
+            objectInfo.uniformBuffer?.destroy();
             objectInfo.uniformBuffer = GPUBufferNull
         }
 
@@ -152,7 +152,7 @@ export class TextureCanvasMipmap extends Base {
         this.viewProjectionMatrix = Float32ArrayNull;
 
 
-        this.texture.destroy();
+        this.texture?.destroy();
         this.texture = GPUTextureNull;
 
     }

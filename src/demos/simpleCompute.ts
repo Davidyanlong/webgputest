@@ -103,8 +103,8 @@ export class SimpleCompute extends Base {
         this.isComputed =true;
     }
 
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
 
         this.workBuffer?.destroy();
         this.resultBuffer?.destroy();

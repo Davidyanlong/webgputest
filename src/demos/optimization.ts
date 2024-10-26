@@ -1,4 +1,5 @@
 import { Base } from "../common/base";
+import { anyNull, Float32ArrayNull, GPUBufferNull, GPUSamplerNull, GPUTextureNull } from "../common/constant";
 import { GenerateMips } from "../common/generateMips";
 import { GPUContext } from "../common/gpuContext";
 import shadercode from '../shaders/optimization/optimization.wgsl?raw'
@@ -281,7 +282,7 @@ export class Optimization extends Base {
             label: 'our encoder'
         });
 
-//#region  unifromBuffer 更新
+        //#region  unifromBuffer 更新
         // 这里必须是临时变量， 不然会报错
         const transferBuffer = this.getMappedTransferBuffer();
         const uniformValues = new Float32Array(transferBuffer.getMappedRange());
@@ -324,7 +325,7 @@ export class Optimization extends Base {
             const size = (this.settings.numObjects - 1) * this.uniformBufferSpace + this.uniformBufferSize;
             encoder.copyBufferToBuffer(transferBuffer, 0, this.uniformBuffer, 0, size);
         }
-//#endregion
+        //#endregion
 
         const pass = this.timingHelper.beginRenderPass(encoder, this.renderPassDescriptor) as GPURenderPassEncoder;
         pass.setPipeline(this.pipeline as GPURenderPipeline);
@@ -364,6 +365,71 @@ export class Optimization extends Base {
         this.stat();
         this.then = time;
     }
+
+    static destroy(): void {
+        super.destroy();
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull;
+
+        this.indicesBuffer?.destroy();
+        this.indicesBuffer = GPUBufferNull;
+
+        let objInfo;
+        while (objInfo = this.objectInfos?.pop()) {
+            objInfo.bindGroup = anyNull;
+            objInfo.axis = anyNull
+            objInfo.radius = anyNull
+            objInfo.rotationSpeed = anyNull
+            objInfo.scale = anyNull
+            objInfo.speed = anyNull
+        }
+        this.objectInfos = anyNull;
+
+        this.timingHelper?.destroy();
+        this.timingHelper = anyNull;
+
+        this.fpsAverage?.destroy();
+        this.fpsAverage = anyNull
+        this.jsAverage?.destroy();
+        this.jsAverage = anyNull;
+        this.gpuAverage?.destroy();
+        this.gpuAverage = anyNull;
+        this.mathAverage?.destroy();
+        this.mathAverage = anyNull
+        if (this.infoElem) {
+            this.infoElem.innerHTML = ''
+        }
+
+        let mat;
+        while (mat = this.materials?.pop()) {
+            mat.materialUniformBuffer?.destroy();
+            mat.materialUniformBuffer = GPUBufferNull
+            mat.sampler = GPUSamplerNull
+            mat.texture?.destroy()
+            mat.texture = GPUTextureNull
+        }
+        this.materials = anyNull;
+
+        this.globalUniformBuffer?.destroy();
+        this.globalUniformBuffer = GPUBufferNull;
+
+        this.viewProjectionValue = Float32ArrayNull
+        this.lightWorldPositionValue = Float32ArrayNull
+        this.viewWorldPositionValue = Float32ArrayNull
+
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull
+
+        let buffer;
+        while (buffer = this.mappedTransferBuffers?.pop()) {
+            buffer.destroy();
+        }
+
+        this.mappedTransferBuffers = anyNull
+        this.globalUniformValues = Float32ArrayNull
+
+    }
+
 
     protected static initGUI() {
         if (this.gui) return;

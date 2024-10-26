@@ -107,6 +107,11 @@ export const randomArrayElement = <T>(arr: T[]):T => arr[Math.random() * arr.len
 /** Rounds up v to a multiple of alignment */
 export const roundUp = (v: number, alignment: number) => Math.ceil(v / alignment) * alignment;
 
+export function assert(cond: boolean, msg: string = '') {
+  if (!cond) {
+      throw new Error(msg);
+  }
+}
 
 export interface mipMapParams {
   data: typeArray,

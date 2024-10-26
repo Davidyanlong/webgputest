@@ -1,7 +1,9 @@
 
 import { Base } from "../common/base"
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/transform/transform.wgsl?raw'
 import { createFVertices } from "../utils/createF"
+import { radToDegOptions } from "../utils/gui"
 import { degToRad } from "../utils/utils"
 
 /**
@@ -9,7 +11,6 @@ import { degToRad } from "../utils/utils"
  * 简单的三角形
  */
 export class Transform extends Base {
-    private static settings: Record<string, any>
     private static vertexBuffer: GPUBuffer
     private static indexBuffer: GPUBuffer
     private static uniformBuffer: GPUBuffer
@@ -39,7 +40,6 @@ export class Transform extends Base {
             label: 'our hardcoded red triangle shaders',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -64,14 +64,13 @@ export class Transform extends Base {
                 ],
             },
         });
-
         //#endregion
 
 
 
         // color, resolution, translation, rotation, scale
         const uniformBufferSize = (4 + 2 + 2 + 2 + 2) * 4;
-        this.uniformBuffer = device.createBuffer({
+        this.uniformBuffer = this.uniformBuffer = device.createBuffer({
             label: 'uniforms',
             size: uniformBufferSize,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -183,8 +182,31 @@ export class Transform extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    private static initGUI() {
-        if(this.gui) return;
+
+    static destroy(): void {
+        super.destroy();
+
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull
+
+        this.indexBuffer?.destroy();
+        this.indexBuffer = GPUBufferNull
+
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull
+
+        this.bindGroup = GPUBindGroupNull
+
+        this.resolutionValue = Float32ArrayNull
+        this.translationValue = Float32ArrayNull
+        this.rotationValue = Float32ArrayNull
+        this.scaleValue = Float32ArrayNull
+        this.uniformValues = Float32ArrayNull
+    }
+
+    protected static initGUI() {
+        if (this.gui) return;
+        super.initGUI();
 
         this.settings = {
             translation: [150, 100],
@@ -192,21 +214,12 @@ export class Transform extends Base {
             scale: [1, 1],
         };
 
-        // @ts-ignore
-        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
-        // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-
-        gui.add(this.settings.translation, '0', 0, 1000).name('translation.x');
-        gui.add(this.settings.translation, '1', 0, 1000).name('translation.y');
-        gui.add(this.settings, 'rotation', radToDegOptions);
-        gui.add(this.settings.scale, '0', -5, 5).name('scale.x');
-        gui.add(this.settings.scale, '1', -5, 5).name('scale.y');
+        this.gui.add(this.settings.translation, '0', 0, 1000).name('translation.x');
+        this.gui.add(this.settings.translation, '1', 0, 1000).name('translation.y');
+        this.gui.add(this.settings, 'rotation', radToDegOptions);
+        this.gui.add(this.settings.scale, '0', -5, 5).name('scale.x');
+        this.gui.add(this.settings.scale, '1', -5, 5).name('scale.y');
     }
 }
 

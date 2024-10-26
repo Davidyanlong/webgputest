@@ -1,4 +1,6 @@
+import { anyNull, GPUBufferNull, GPUQuerySetNull } from "../common/constant";
 import { GPUContext } from "../common/gpuContext";
+import { assert } from "./utils";
 
 export class TimingHelper {
     private canTimestamp!: boolean;
@@ -6,11 +8,13 @@ export class TimingHelper {
     private querySet!: GPUQuerySet;
     private resolveBuffer!: GPUBuffer;
     private resultBuffer!: GPUBuffer;
-    private resultBuffers: GPUBuffer[] = [];
+    private resultBuffers: GPUBuffer[];
     // state can be 'free', 'need resolve', 'wait for result'
-    private state: string = 'free';
+    private state: string;
 
     constructor(device: GPUDevice) {
+        this.state = 'free'
+        this.resultBuffers = [];
         this.initialize(device)
     }
 
@@ -108,14 +112,31 @@ export class TimingHelper {
         this.resultBuffers.push(resultBuffer);
         return duration;
     }
+
+    destroy(){
+        this.canTimestamp = false
+        this.querySet?.destroy();
+        this.querySet = GPUQuerySetNull
+        this.resolveBuffer?.destroy();
+        this.resolveBuffer = GPUBufferNull
+        this.resultBuffer?.destroy();
+        this.resultBuffer = GPUBufferNull
+        let buffer;
+        while(buffer = this.resultBuffers?.pop()){
+            buffer.destroy();
+        }
+        this.device = anyNull;
+    }
 }
 
 export class RollingAverage {
     private total: number = 0;
-    private samples: number[] = [];
-    private cursor: number = 0;
+    private samples: number[];
+    private cursor: number;
     private numSamples: number;
     constructor(numSamples = 30) {
+        this.samples = [];
+        this.cursor = 0;
         this.numSamples = numSamples;
     }
     addSample(v: number) {
@@ -126,11 +147,8 @@ export class RollingAverage {
     get() {
         return this.total / this.samples.length;
     }
-}
-
-
-export function assert(cond: boolean, msg: string = '') {
-    if (!cond) {
-        throw new Error(msg);
+    
+    destroy(){
+        this.samples = anyNull
     }
 }

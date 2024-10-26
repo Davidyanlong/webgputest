@@ -3,6 +3,7 @@ import { Base } from "../common/base"
 import { GenerateMips } from "../common/generateMips"
 import shadercode from '../shaders/environmentMap/environmentMap.wgsl?raw'
 import { createCubeVerticesAndNormal } from '../utils/cube'
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull, GPUTextureNull } from "../common/constant"
 
 /**
  * 渲染基本流程
@@ -10,18 +11,19 @@ import { createCubeVerticesAndNormal } from '../utils/cube'
  */
 export class EnvironmentMap extends Base {
     private static bindGroup: GPUBindGroup
-    private static vertexBuffer:GPUBuffer
-    private static indexBuffer:GPUBuffer
-    private static uniformBuffer:GPUBuffer
-    private static uniformValues:Float32Array
-    private static numVertices:number
+    private static vertexBuffer: GPUBuffer
+    private static indexBuffer: GPUBuffer
+    private static uniformBuffer: GPUBuffer
+    private static uniformValues: Float32Array
+    private static numVertices: number
 
-    private static projectionValue:Float32Array
-    private static viewValue:Float32Array
-    private static worldValue:Float32Array
-    private static cameraPositionValue:Float32Array
+    private static projectionValue: Float32Array
+    private static viewValue: Float32Array
+    private static worldValue: Float32Array
+    private static cameraPositionValue: Float32Array
+    private static texture: GPUTexture
 
-    
+
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
@@ -65,12 +67,11 @@ export class EnvironmentMap extends Base {
                 format: 'depth24plus',
             },
         });
-
         //#endregion
 
-        const {texture } = await this.initTexture()
+        const { texture } = await this.initTexture()
 
-        const uniformBuffer = this.uniformBuffer= this.initUniform()
+        const uniformBuffer = this.uniformBuffer = this.initUniform()
 
         this.initVertexData()
 
@@ -110,11 +111,10 @@ export class EnvironmentMap extends Base {
                 depthStoreOp: 'store',
             },
         };
-
         //#endregion
         this.isInited = true;
     }
-    
+
     static update(dt: number): void {
         if (!this.isInited) return;
         const time = dt * 0.001
@@ -129,17 +129,16 @@ export class EnvironmentMap extends Base {
         );
         this.cameraPositionValue.set([0, 0, 4]);  // camera position;
         mat4.lookAt(
-          this.cameraPositionValue,
-          [0, 0, 0],  // target
-          [0, 1, 0],  // up
-          this.viewValue,
+            this.cameraPositionValue,
+            [0, 0, 0],  // target
+            [0, 1, 0],  // up
+            this.viewValue,
         );
         mat4.identity(this.worldValue);
         mat4.rotateX(this.worldValue, time * -0.1, this.worldValue);
         mat4.rotateY(this.worldValue, time * -0.2, this.worldValue);
         // upload the uniform values to the uniform buffer
         this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
-
     }
 
     static draw() {
@@ -150,8 +149,8 @@ export class EnvironmentMap extends Base {
 
         colorAttach && (colorAttach.view =
             this.context!.getCurrentTexture().createView());
-         super.getDepthTexture()
-         this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
+        super.getDepthTexture()
+        this.renderPassDescriptor.depthStencilAttachment!.view = this.depthTexture!.createView();
 
 
         // make a command encoder to start encoding commands
@@ -163,8 +162,8 @@ export class EnvironmentMap extends Base {
         const pass = encoder.beginRenderPass(this.renderPassDescriptor);
         pass.setPipeline(this.pipeline as GPURenderPipeline);
         pass.setVertexBuffer(0, this.vertexBuffer);
-        pass.setIndexBuffer(this.indexBuffer,'uint16');
-    
+        pass.setIndexBuffer(this.indexBuffer, 'uint16');
+
         pass.setBindGroup(0, this.bindGroup);
         pass.drawIndexed(this.numVertices);
         pass.end();
@@ -172,20 +171,40 @@ export class EnvironmentMap extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    
+
+    static destroy(): void {
+        super.destroy();
+
+        this.bindGroup = GPUBindGroupNull;
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull
+        this.indexBuffer?.destroy();
+        this.indexBuffer = GPUBufferNull
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull
+        this.uniformValues = Float32ArrayNull
+
+        this.projectionValue = Float32ArrayNull
+        this.viewValue = Float32ArrayNull
+        this.worldValue = Float32ArrayNull
+        this.cameraPositionValue = Float32ArrayNull
+        this.texture?.destroy()
+        this.texture = GPUTextureNull
+    }
+
     private static async initTexture() {
-        const texture = await GenerateMips.createTextureFromImages(
-            this.device, 
+        const texture = this.texture = await GenerateMips.createTextureFromImages(
+            this.device,
             [
-                '/cube/leadenhall_market/pos-x.jpg',  
-                '/cube//leadenhall_market/neg-x.jpg',  
-                '/cube//leadenhall_market/pos-y.jpg',  
-                '/cube//leadenhall_market/neg-y.jpg',  
-                '/cube//leadenhall_market/pos-z.jpg',  
-                '/cube//leadenhall_market/neg-z.jpg',  
-              ],
+                '/cube/leadenhall_market/pos-x.jpg',
+                '/cube//leadenhall_market/neg-x.jpg',
+                '/cube//leadenhall_market/pos-y.jpg',
+                '/cube//leadenhall_market/neg-y.jpg',
+                '/cube//leadenhall_market/pos-z.jpg',
+                '/cube//leadenhall_market/neg-z.jpg',
+            ],
             { mips: true, flipY: false });
-            
+
         return {
             texture
         };
@@ -200,7 +219,7 @@ export class EnvironmentMap extends Base {
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
-        const uniformValues =  this.uniformValues= new Float32Array(uniformBufferSize / 4);
+        const uniformValues = this.uniformValues = new Float32Array(uniformBufferSize / 4);
 
         // offsets to the various uniform values in float32 indices
         const kProjectionOffset = 0;

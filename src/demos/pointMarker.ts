@@ -1,4 +1,5 @@
 import { Base } from "../common/base"
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull, GPUSamplerNull, GPUTextureNull } from "../common/constant";
 import shadercode from '../shaders/pointMarker/pointMarker.wgsl?raw'
 import { rand } from "../utils/utils";
 
@@ -7,7 +8,7 @@ import { rand } from "../utils/utils";
  * 顶点着色渲染
  */
 export class PointMarker extends Base {
-    public static kNumPoints: number = 100
+    public static kNumPoints: number;
 
     private static texture: GPUTexture
     private static sampler: GPUSampler
@@ -16,11 +17,14 @@ export class PointMarker extends Base {
     private static uniformValues: Float32Array
     private static bindGroup: GPUBindGroup
     private static vertexBuffer: GPUBuffer
-    
+
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device);
         super.initCanvas('pointMarker')
+
+        // 参数初始化
+        this.kNumPoints = 100;
 
         //#region  shaderModule
         const module = device.createShaderModule({
@@ -68,7 +72,6 @@ export class PointMarker extends Base {
                 ],
             },
         });
-
         //#endregion
 
         this.initTexture();
@@ -123,6 +126,26 @@ export class PointMarker extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
+    static destroy(): void {
+        super.destroy();
+
+        this.texture?.destroy();
+        this.texture = GPUTextureNull;
+
+        this.sampler = GPUSamplerNull
+        this.resolutionValue = Float32ArrayNull
+
+        this.uniformBuffer?.destroy()
+        this.uniformBuffer = GPUBufferNull
+
+        this.uniformValues = Float32ArrayNull
+        this.bindGroup = GPUBindGroupNull
+
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull;
+
+    }
+
     private static initTexture() {
         // 使用离线canvas 
         const ctx = new OffscreenCanvas(32, 32).getContext('2d')!;
@@ -171,7 +194,7 @@ export class PointMarker extends Base {
         });
         this.device.queue.writeBuffer(vertexBuffer, 0, vertexData);
 
-        const uniformValues = this.uniformValues= new Float32Array(2);
+        const uniformValues = this.uniformValues = new Float32Array(2);
         const uniformBuffer = this.uniformBuffer = this.device.createBuffer({
             size: uniformValues.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,

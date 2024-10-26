@@ -135,8 +135,8 @@ export class ComputeDynamicOffsets extends Base {
         this.isComputed = true;
     }
 
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
         this.workBuffer.destroy();
         this.resultBuffer.destroy();
         (this.input as any) = null;

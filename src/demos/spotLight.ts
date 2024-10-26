@@ -1,17 +1,17 @@
 
 import { Base } from "../common/base"
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/spotLight/spotLight.wgsl?raw'
 import { createFVerticesNormal } from "../utils/createF"
+import { limitOptionsFn, radToDegOptions } from "../utils/gui"
 import { mat3 } from "../utils/mat3"
 import { mat4 } from "../utils/mat4"
 import { degToRad } from "../utils/utils"
 
 /**
- * 点光源
+ * 聚光灯
  */
 export class SpotLight extends Base {
-    public static radius: number = 200;
-    private static settings: Record<string, any>
     private static vertexBuffer: GPUBuffer
     private static numVertices: number
 
@@ -46,7 +46,6 @@ export class SpotLight extends Base {
             label: 'orthogonal shader module',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -80,7 +79,6 @@ export class SpotLight extends Base {
                 format: 'depth24plus',
             },
         });
-
         //#endregion
 
 
@@ -251,8 +249,33 @@ export class SpotLight extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    private static initGUI() {
+    static destroy(): void {
+        super.destroy()
+
+        this.vertexBuffer?.destroy()
+        this.vertexBuffer = GPUBufferNull
+
+
+        this.bindGroup = GPUBindGroupNull
+        this.worldViewProjectionValue = Float32ArrayNull
+        this.normalMatrixValue = Float32ArrayNull
+        this.worldValue = Float32ArrayNull
+        this.colorValue = Float32ArrayNull
+        this.lightWorldPositionValue = Float32ArrayNull
+        this.viewWorldPositionValue = Float32ArrayNull
+        this.shininessValue = Float32ArrayNull
+        this.uniformBuffer?.destroy()
+        this.uniformBuffer = GPUBufferNull
+        this.uniformValues = Float32ArrayNull
+        this.lightDirectionValue = Float32ArrayNull
+        this.innerLimitValue = Float32ArrayNull
+        this.outerLimitValue = Float32ArrayNull
+    }
+
+    protected static initGUI() {
         if (this.gui) return;
+        super.initGUI();
+
         this.settings = {
             rotation: degToRad(0),
             shininess: 30,
@@ -262,25 +285,13 @@ export class SpotLight extends Base {
             aimOffsetY: 10,
         };
 
-        // @ts-ignore
-        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
-        // @ts-ignore
-        const limitOptions = { min: 0, max: 90, minRange: 1, step: 1, converters: GUI.converters.radToDeg };
+        const limitOptions = limitOptionsFn();
 
+        this.gui.add(this.settings, 'rotation', radToDegOptions);
+        this.gui.add(this.settings, 'shininess', { min: 1, max: 250 });
         // @ts-ignore
-        const gui = this.gui = new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-        gui.domElement.style.left = '150px';
-
-        // @ts-ignore
-        gui.add(this.settings, 'rotation', radToDegOptions);
-        gui.add(this.settings, 'shininess', { min: 1, max: 250 });
-        // @ts-ignore
-        GUI.makeMinMaxPair(gui, this.settings, 'innerLimit', 'outerLimit', limitOptions);
-        gui.add(this.settings, 'aimOffsetX', -50, 50);
-        gui.add(this.settings, 'aimOffsetY', -50, 50);
+        GUI.makeMinMaxPair(this.gui, this.settings, 'innerLimit', 'outerLimit', limitOptions);
+        this.gui.add(this.settings, 'aimOffsetX', -50, 50);
+        this.gui.add(this.settings, 'aimOffsetY', -50, 50);
     }
 }

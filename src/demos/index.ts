@@ -55,7 +55,6 @@ export const demos = [
     TextureImage,
     TextureImageMipmap,
     TextureCanvasMipmap,
-    
     TextureVideoMipmap,
     TextureVideo,
     CubeTexture,

@@ -3,6 +3,7 @@ import { Base } from "../common/base"
 import { GenerateMips } from "../common/generateMips"
 import shadercode from '../shaders/cubeTexture/cube_texture.wgsl?raw'
 import { createCubeVertices, faceCanvases } from '../utils/cube'
+import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull, GPUTextureNull } from "../common/constant"
 
 /**
  * 渲染基本流程
@@ -17,7 +18,8 @@ export class CubeTexture extends Base {
     private static projectionMatrix: Float32Array
     private static viewMatrix: Float32Array
     private static uniformValues: Float32Array
-    private static numVertices: number
+    private static texture: GPUTexture
+    private static numVertices:number
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
@@ -29,7 +31,6 @@ export class CubeTexture extends Base {
             code: shadercode,
         });
         //#endregion
-
 
 
         //#region  render pipeline
@@ -60,7 +61,6 @@ export class CubeTexture extends Base {
                 format: 'depth24plus',
             },
         });
-
         //#endregion
 
         const { texture } = await this.initTexture()
@@ -172,10 +172,27 @@ export class CubeTexture extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
+    static destroy(): void {
+        super.destroy();
+        this.bindGroup = GPUBindGroupNull
+        this.vertexBuffer?.destroy();
+        this.vertexBuffer = GPUBufferNull
+        this.indexBuffer?.destroy();
+        this.indexBuffer = GPUBufferNull
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = GPUBufferNull
+        this.matrixValue = Float32ArrayNull
+        this.projectionMatrix = Float32ArrayNull
+        this.viewMatrix = Float32ArrayNull
+        this.uniformValues = Float32ArrayNull
+        this.texture?.destroy();
+        this.texture = GPUTextureNull
+    }
+
     private static async initTexture() {
-        const texture = await GenerateMips.createTextureFromSources(
+        const texture = this.texture = await GenerateMips.createTextureFromSources(
             this.device, faceCanvases, { mips: true, flipY: false });
-       
+
 
         return {
             texture

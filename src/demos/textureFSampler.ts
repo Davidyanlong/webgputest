@@ -165,9 +165,9 @@ export class TextureFSampler extends Base {
         this.gui.add(this.settings, 'addressModeV', addressOptions);
         this.gui.add(this.settings, 'magFilter', filterOptions);
     }
-    static destory(): void {
-        super.destory();
-        this.texture.destroy();
+    static destroy(): void {
+        super.destroy();
+        this.texture?.destroy();
         this.texture = GPUTextureNull;
         this.bindGroups = anyNull;
     }

@@ -32,10 +32,10 @@ export class Application {
         }
 
     }
-    static destory() {
+    static destroy() {
         for (let demo of demos) {
             console.log(`${demo.name} destoried`)
-            demo.destory();
+            demo.destroy();
         }
     }
 }

@@ -93,5 +93,9 @@ export class ConstantShaderTriangle extends Base{
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+
+    static destroy(): void {
+        super.destroy();
+    }
 }
 

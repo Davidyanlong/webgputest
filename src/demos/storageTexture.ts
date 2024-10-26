@@ -41,7 +41,6 @@ export class StorageTexture extends Base {
                 }
         `,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -52,7 +51,6 @@ export class StorageTexture extends Base {
                 module,
             }
         });
-
         //#endregion
 
 
@@ -79,6 +77,11 @@ export class StorageTexture extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+
+    static destroy(): void {
+        super.destroy();
+
     }
 }
 

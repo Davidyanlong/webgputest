@@ -139,8 +139,8 @@ export class UniformTriangle extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
-    static destory() {
-        super.destory();
+    static destroy() {
+        super.destroy();
 
         (this.color as any) = null;
         (this.scale as any) = null;

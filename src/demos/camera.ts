@@ -1,7 +1,9 @@
 
 import { Base } from "../common/base"
+import { anyNull, Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/orthogonal/orthogonal.wgsl?raw'
 import { createFVerticesCCW } from "../utils/createF"
+import { radToDegOptions } from "../utils/gui"
 import { mat4 } from "../utils/mat4"
 import { degToRad } from "../utils/utils"
 
@@ -9,18 +11,22 @@ import { degToRad } from "../utils/utils"
  * 正交投影
  */
 export class Camera extends Base {
-    public static radius: number = 200;
-    private static settings: Record<string, any>
+    public static radius: number;
     private static vertexBuffer: GPUBuffer
     private static numVertices: number
-    private static objectInfos: objectInfosType[] = []
-    private static numFs: number = 5
+    private static objectInfos: objectInfosType[]
+    private static numFs: number
 
 
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
         super.initCanvas('camera')
+
+        // 参数初始化
+        this.radius = 200;
+        this.numFs = 5;
+        this.objectInfos = [];
 
         this.context.configure({
             device: this.device,
@@ -226,29 +232,40 @@ export class Camera extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    private static initGUI() {
+    static destroy(): void {
+        super.destroy();
+
+        this.vertexBuffer?.destroy()
+        this.vertexBuffer = GPUBufferNull
+        let objInfo;
+        while(objInfo = this.objectInfos?.pop()){
+            objInfo.bindGroup = GPUBindGroupNull
+            objInfo.matrixValue = Float32ArrayNull
+            objInfo.uniformBuffer?.destroy()
+            objInfo.uniformBuffer = GPUBufferNull
+            objInfo.uniformValues = Float32ArrayNull
+        }
+
+        this.objectInfos = anyNull
+    }
+
+    protected static initGUI() {
 
         if (this.gui) return;
+
+        super.initGUI();
+
 
         this.settings = {
             // 透视垂直视角
             fieldOfView: degToRad(100),
             cameraAngle: 0,
         };
-        // @ts-ignore
-        const radToDegOptions = { min: -360, max: 360, step: 1, converters: GUI.converters.radToDeg };
 
+      
         // @ts-ignore
-        const gui = this.gui =  new GUI({
-            parent: (this.context.canvas as HTMLCanvasElement).parentElement,
-            width: '145px'
-        })
-        gui.domElement.style.top = '-300px';
-        gui.domElement.style.left = '150px';
-
-        // @ts-ignore
-        gui.add(this.settings, 'fieldOfView', { min: 1, max: 179, converters: GUI.converters.radToDeg });
-        gui.add(this.settings, 'cameraAngle', radToDegOptions);
+        this.gui.add(this.settings, 'fieldOfView', { min: 1, max: 179, converters: GUI.converters.radToDeg });
+        this.gui.add(this.settings, 'cameraAngle', radToDegOptions);
     }
 }
 

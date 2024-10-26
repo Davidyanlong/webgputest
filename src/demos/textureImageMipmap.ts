@@ -147,9 +147,9 @@ export class TextureImageMipmap extends Base {
 
     }
 
-    static destory(): void {
+    static destroy(): void {
         this.context?.canvas?.removeEventListener('click', this.clickEvent)
-        super.destory();
+        super.destroy();
         let objInfo,texture;
         while(objInfo = this.objectInfos?.pop()){
             objInfo.bindGroups = anyNull;

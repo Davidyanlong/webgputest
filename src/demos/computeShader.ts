@@ -1,4 +1,5 @@
 import { Base } from "../common/base"
+import { anyNull, GPUBindGroupLayoutNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/computeShader/computeShader.wgsl?raw'
 import { arrayProd } from "../utils/utils"
 
@@ -12,8 +13,8 @@ export class ComputeShader extends Base {
     private static globalBuffer: GPUBuffer
     private static isComputed: boolean;
 
-    public static dispatchCount: [number, number, number] = [4, 3, 2];
-    public static workgroupSize: [number, number, number] = [2, 3, 4];
+    public static dispatchCount: [number, number, number];
+    public static workgroupSize: [number, number, number];
     private static numThreadsPerWorkgroup: number
     private static container: HTMLDivElement
     private static numResults: number
@@ -21,6 +22,10 @@ export class ComputeShader extends Base {
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
+
+        // 参数初始化
+        this.dispatchCount = [4, 3, 2];
+        this.workgroupSize = [2, 3, 4]
 
         this.numThreadsPerWorkgroup = arrayProd(this.workgroupSize);
 
@@ -132,6 +137,38 @@ export class ComputeShader extends Base {
 
 
     }
+
+    static destroy(): void {
+        super.destroy();
+
+        this.isComputed = true;
+
+        this.bindGroup = GPUBindGroupNull;
+        this.workgroupReadBuffer?.destroy();
+        this.workgroupBuffer = GPUBufferNull;
+
+        this.localReadBuffer?.destroy();
+        this.localReadBuffer = GPUBufferNull
+
+        this.globalReadBuffer?.destroy();
+        this.globalBuffer = GPUBufferNull;
+
+        this.workgroupBuffer?.destroy();
+        this.workgroupBuffer = GPUBufferNull
+
+        this.localBuffer?.destroy();
+        this.localBuffer = GPUBufferNull
+
+        this.globalBuffer?.destroy();
+        this.globalBuffer =GPUBufferNull;
+    
+        this.dispatchCount = anyNull
+        this.workgroupSize = anyNull;
+
+        this.container.innerHTML = '';
+
+    }
+
     private static log(...args: any[]) {
         const elem = document.createElement('pre');
         elem.textContent = args.join(' ');

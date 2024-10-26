@@ -138,8 +138,8 @@ export class TextureMipMap extends Base {
         this.device!.queue.submit([commandBuffer]);
     }
 
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
         let texure,objectInfo;
         while(texure = this.textures?.pop()){
             texure.destroy();

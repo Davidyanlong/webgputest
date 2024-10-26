@@ -28,7 +28,7 @@ export class Destroy {
     private static deviceTest() {
 
         const parmas = {
-            deviceDestory:()=>{
+            devicedestroy:()=>{
                 GPUContext.device.destroy();
             },
             deviceStart:async ()=>{
@@ -39,28 +39,30 @@ export class Destroy {
             }
         }
         let gui = this.gui.addFolder('设备销毁测试')
-        gui.add(parmas,"deviceDestory").name('设备销毁');
+        gui.add(parmas,"devicedestroy").name('设备销毁');
         gui.add(parmas,"deviceStart").name('设备重启');
 
        
     }
     // 测试二 demo 销毁
     private static bufferTest(){
-        const TestID = 14
         const parmas = {
-            demoDestory:()=>{
-                // demos.forEach(demo=>{
-                //     demo.initialize(GPUContext.device)
-                // })
-                demos[TestID].destory()
+            demodestroy:()=>{
+                demos.forEach(demo=>{
+                    demo.destroy()
+                })
+                GPUContext.device.destroy();
             },
-            demoReStart:()=>{
-                demos[TestID].initialize(GPUContext.device);
+            demoReStart: async()=>{
+                await GPUContext.initialize();
+                demos.forEach(demo=>{
+                    demo.initialize(GPUContext.device);
+                })
             }
             
         }
         let gui = this.gui.addFolder('buffer销毁')
-        gui.add(parmas,"demoDestory").name('demo销毁');
+        gui.add(parmas,"demodestroy").name('demo销毁');
         gui.add(parmas,"demoReStart").name('demo重新启动');
 
     } 

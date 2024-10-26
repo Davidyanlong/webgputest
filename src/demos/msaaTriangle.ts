@@ -1,4 +1,5 @@
 import { Base } from "../common/base"
+import { GPUTextureNull } from "../common/constant"
 import shadercode from '../shaders/simpleTriangle/simple_triangle.wgsl?raw'
 
 /**
@@ -121,6 +122,11 @@ export class MSAATriangle extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+    static destroy(): void {
+        super.destroy();
+        this.multsampleTexture?.destroy();
+        this.multsampleTexture = GPUTextureNull
     }
 }
 

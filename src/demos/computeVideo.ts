@@ -9,12 +9,13 @@ import videoShaderCode from '../shaders/computeVideo/video.wgsl?raw'
 import { startPlayingAndWaitForVideo } from "../utils/video"
 import { range, subpart } from "../utils/utils"
 import { mat4 } from "../utils/mat4"
+import { anyNull, Float32ArrayNull, GPUBindGroupNull, GPUBufferNull, GPUCommandEncoderNull, GPUComputePipelineNull, GPURenderPipelineNull, GPUSamplerNull } from "../common/constant"
 
 
 export class ComputeVideoHistogram extends Base {
 
     public static dispatchCount: [number, number];
-    public static workgroupSize: [number, number] = [256, 1];
+    public static workgroupSize: [number, number];
 
     private static chunksBuffer: GPUBuffer
     private static videoUniformBuffer: GPUBuffer
@@ -30,7 +31,7 @@ export class ComputeVideoHistogram extends Base {
     private static numChunks: number
     private static video: HTMLVideoElement
     private static histogramDrawInfos: objInfo[]
-  
+
 
     private static chunkSize: number
     private static chunksAcross: number
@@ -51,6 +52,7 @@ export class ComputeVideoHistogram extends Base {
         // 参数初始化
         this.sumBindGroups = [];
         this.histogramDrawInfos = [];
+        this.workgroupSize = [256, 1];
 
         const chunkWidth = this.workgroupSize[0];
         const chunkHeight = this.workgroupSize[1];
@@ -278,8 +280,6 @@ export class ComputeVideoHistogram extends Base {
             ],
         };
 
-
-
         this.isInited = true;
 
     }
@@ -338,7 +338,7 @@ export class ComputeVideoHistogram extends Base {
             pass.end();
         }
 
-       
+
 
         {
             let canvas = this.context.canvas as HTMLCanvasElement
@@ -378,7 +378,7 @@ export class ComputeVideoHistogram extends Base {
     static draw(): void {
         if (!this.isInited) return;
 
- 
+
         // Draw to canvas
         {
 
@@ -417,6 +417,55 @@ export class ComputeVideoHistogram extends Base {
         this.device.queue.submit([commandBuffer]);
     }
 
+    static destroy(): void {
+        super.destroy();
+
+        this.video?.pause();
+        this.video?.removeAttribute('src');
+        this.video = anyNull
+
+        this.dispatchCount = anyNull;
+        this.workgroupSize = anyNull;
+
+        this.chunksBuffer?.destroy();
+        this.chunksBuffer = GPUBufferNull;
+
+        this.videoUniformBuffer?.destroy();
+        this.videoUniformBuffer = GPUBufferNull;
+
+        this.scaleBuffer?.destroy();
+        this.scaleBuffer = GPUBufferNull;
+
+        this.chunkSumPipeline = GPUComputePipelineNull
+        this.scalePipeline = GPUComputePipelineNull
+        this.histogramChunkPipeline = GPUComputePipelineNull
+        this.drawHistogramPipeline = GPURenderPipelineNull
+        this.videoPipeline = GPURenderPipelineNull
+
+        this.sumBindGroups = anyNull;
+
+        let objInfo;
+        while (objInfo = this.histogramDrawInfos?.pop()) {
+            objInfo.drawHistogramBindGroup = GPUBindGroupNull
+            objInfo.matrix = Float32ArrayNull
+            objInfo.uniformBuffer?.destroy();
+            objInfo.uniformBuffer = GPUBufferNull
+            objInfo.uniformValuesAsF32 = Float32ArrayNull
+        }
+        this.histogramDrawInfos = anyNull
+
+        this.encoder = GPUCommandEncoderNull
+
+        this.videoSampler = GPUSamplerNull; 
+
+        // GPUExternalTexture
+        this.texture = anyNull;
+
+        this.videoMatrix = Float32ArrayNull;
+        this.videoUniformValues = Float32ArrayNull;
+
+    }
+
 
     private static replaceShader(code: string, replaceObj: keyValue[]) {
         replaceObj.forEach((kv: keyValue) => {
@@ -433,7 +482,7 @@ export class ComputeVideoHistogram extends Base {
         video.muted = true;
         video.loop = true;
         video.preload = 'auto';
-        video.src = './videos/pexels-kosmo-politeska-5750980 (1080p).mp4'; 
+        video.src = './videos/pexels-kosmo-politeska-5750980 (1080p).mp4';
         //video.src = './videos/production_id_4166349 (540p).mp4'; 
         //video.src = './videos/production_id_5077580 (1080p).mp4'; 
 

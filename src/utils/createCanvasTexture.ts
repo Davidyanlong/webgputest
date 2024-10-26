@@ -26,7 +26,7 @@ export class CanvasAnimationTexture {
         this.ctx.restore();
     }
 
-    destory(){
+    destroy(){
         this.ctx = CanvasRenderingContext2DNull
     }
 

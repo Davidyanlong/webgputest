@@ -127,10 +127,10 @@ export class TextureF extends Base {
         });
 
     }
-    static destory(): void {
-        super.destory();
+    static destroy(): void {
+        super.destroy();
         this.bindGroup = GPUBindGroupNull
-        this.texture.destroy();
+        this.texture?.destroy();
         this.texture = GPUTextureNull;
     }
 }

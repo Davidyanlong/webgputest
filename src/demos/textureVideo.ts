@@ -3,6 +3,7 @@ import shadercode from '../shaders/textureVideo/texture_video.wgsl?raw'
 import { GenerateMips } from "../common/generateMips"
 import { mat4 } from "wgpu-matrix"
 import { startPlayingAndWaitForVideo } from "../utils/video"
+import { Float32ArrayNull, GPUBufferNull, GPUSamplerNull, GPUTextureNull, HTMLVideoElementNUll } from "../common/constant"
 
 /**
  * 渲染基本流程
@@ -25,7 +26,6 @@ export class TextureVideo extends Base {
             label: 'our hardcoded textured quad shaders',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -42,18 +42,11 @@ export class TextureVideo extends Base {
                 ],
             },
         });
-
         //#endregion
         
         await this.initTexture()
 
-        this.context.canvas.addEventListener('click', () => {
-            if (this.video.paused) {
-                this.video.play();
-              } else {
-                this.video.pause();
-              }
-        });
+        this.context.canvas.addEventListener('click', this.clickEvent);
 
 
         //#region  渲染队列参数
@@ -201,6 +194,33 @@ export class TextureVideo extends Base {
 
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
+    }
+
+    static destroy(): void {
+        this.context?.canvas?.removeEventListener('click', this.clickEvent);
+        super.destroy();
+        let objInfo;
+        while(objInfo = this.objectInfos?.pop()){
+            objInfo.matrix = Float32ArrayNull
+            objInfo.sampler = GPUSamplerNull
+            objInfo.uniformValues = Float32ArrayNull
+            objInfo.uniformBuffer?.destroy();
+            objInfo.uniformBuffer = GPUBufferNull
+        }
+        this.viewProjectionMatrix = Float32ArrayNull
+        this.texture?.destroy();
+        this.texture = GPUTextureNull
+        this.video?.pause()
+        this.video?.removeAttribute('src')
+        this.video = HTMLVideoElementNUll
+    }
+
+    private static clickEvent = () => {
+        if (this.video.paused) {
+            this.video.play();
+          } else {
+            this.video.pause();
+          }
     }
 }
 

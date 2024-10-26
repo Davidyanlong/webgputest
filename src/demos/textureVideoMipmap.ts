@@ -3,6 +3,7 @@ import shadercode from '../shaders/textureImageMipmap/texture_image_mipmap.wgsl?
 import { GenerateMips } from "../common/generateMips"
 import { mat4 } from "wgpu-matrix"
 import { startPlayingAndWaitForVideo } from "../utils/video"
+import { anyNull, Float32ArrayNull, GPUBufferNull, GPUTextureNull, HTMLVideoElementNUll } from "../common/constant"
 
 /**
  * 渲染基本流程
@@ -10,7 +11,7 @@ import { startPlayingAndWaitForVideo } from "../utils/video"
  */
 export class TextureVideoMipmap extends Base {
     private static objectInfos: objectInfoInterface[] = []
-    private static texNdx = 0;
+    private static texNdx: number;
     private static viewProjectionMatrix: Float32Array
     private static texture: GPUTexture
     private static video: HTMLVideoElement
@@ -21,12 +22,12 @@ export class TextureVideoMipmap extends Base {
 
         // 参数初始化
         this.objectInfos = [];
+        this.texNdx = 0;
 
         const module = device.createShaderModule({
             label: 'our hardcoded textured quad shaders',
             code: shadercode,
         });
-
         //#endregion
 
         //#region  render pipeline
@@ -43,11 +44,9 @@ export class TextureVideoMipmap extends Base {
                 ],
             },
         });
-
         //#endregion
 
         await this.initTexture()
-        this.context.canvas.removeEventListener('click', this.videoClickEvent)
         this.context.canvas.addEventListener('click', this.videoClickEvent);
 
 
@@ -133,6 +132,27 @@ export class TextureVideoMipmap extends Base {
         const commandBuffer = encoder.finish();
         this.device!.queue.submit([commandBuffer]);
     }
+
+    static destroy(): void {
+        this.context?.canvas?.removeEventListener('click', this.videoClickEvent)
+        super.destroy();
+        let objInfo;
+        while (objInfo = this.objectInfos?.pop()) {
+            objInfo.bindGroups = anyNull;
+            objInfo.matrix = Float32ArrayNull
+            objInfo.uniformValues = Float32ArrayNull
+            objInfo.uniformBuffer?.destroy();
+            objInfo.uniformBuffer = GPUBufferNull
+        }
+        this.viewProjectionMatrix = Float32ArrayNull
+        this.texture?.destroy();
+        this.texture = GPUTextureNull
+        this.video?.pause();
+        this.video?.removeAttribute('src');
+        this.video = HTMLVideoElementNUll
+
+    }
+
     private static async initTexture() {
 
         const video = this.video = document.createElement('video');

@@ -3,6 +3,7 @@ import computeHistogramShaderCode from '../shaders/computeHistogram/histogramChu
 import computeChunkSumShaderCode from '../shaders/computeHistogram/chunkSum.wgsl?raw'
 import { loadImageBitmap } from "../utils/res"
 import { GenerateMips } from "../common/generateMips"
+import { anyNull, GPUBindGroupNull, GPUBufferNull, GPUComputePipelineNull, GPUTextureNull } from "../common/constant"
 
 
 export class ComputeHistogram extends Base {
@@ -12,7 +13,7 @@ export class ComputeHistogram extends Base {
     private static isComputed: boolean;
 
     public static dispatchCount: [number, number];
-    public static workgroupSize: [number, number] = [256, 1];
+    public static workgroupSize: [number, number];
     private static container: HTMLDivElement
 
     private static chunkSumPipeline: GPUComputePipeline
@@ -21,30 +22,30 @@ export class ComputeHistogram extends Base {
     private static imgBitmap: ImageBitmap
     private static texture: GPUTexture
 
-
-
-
     static async initialize(device: GPUDevice) {
 
         await super.initialize(device)
+
+        // 初始化参数
+        this.workgroupSize = [256, 1];
 
         //#region  compute pipeline
         const computeModule: GPUShaderModule = device.createShaderModule({
             label: 'histogram chunk shader',
             code: this.replaceShader(computeHistogramShaderCode, [
-                {key: 'chunkWidth', value: this.workgroupSize[0]},
-                {key: 'chunkHeight', value: this.workgroupSize[1]},
-                {key: 'chunkSize', value: this.workgroupSize[0] * this.workgroupSize[1]},
-            ]) 
+                { key: 'chunkWidth', value: this.workgroupSize[0] },
+                { key: 'chunkHeight', value: this.workgroupSize[1] },
+                { key: 'chunkSize', value: this.workgroupSize[0] * this.workgroupSize[1] },
+            ])
         });
         const chunkSumModule: GPUShaderModule = device.createShaderModule({
             label: 'chunk sum shader',
-            code:this.replaceShader(computeChunkSumShaderCode, [
-                {key: 'chunkWidth', value: this.workgroupSize[0]},
-                {key: 'chunkHeight', value: this.workgroupSize[1]},
-                {key: 'chunkSize', value: this.workgroupSize[0] * this.workgroupSize[1]},
-            ])  
-            
+            code: this.replaceShader(computeChunkSumShaderCode, [
+                { key: 'chunkWidth', value: this.workgroupSize[0] },
+                { key: 'chunkHeight', value: this.workgroupSize[1] },
+                { key: 'chunkSize', value: this.workgroupSize[0] * this.workgroupSize[1] },
+            ])
+
         })
 
 
@@ -127,6 +128,7 @@ export class ComputeHistogram extends Base {
 
         this.container = document.querySelector('#computeHistogram')!;
         this.container.innerHTML = ''
+
         this.isInited = true;
         this.isComputed = false;
 
@@ -174,6 +176,28 @@ export class ComputeHistogram extends Base {
         this.getBufferData();
     }
 
+    static destroy(): void {
+        super.destroy();
+
+        this.isComputed = true;
+        this.bindGroup = GPUBindGroupNull
+        this.chunksBuffer?.destroy();
+        this.chunksBuffer = GPUBufferNull;
+        this.resultBuffer?.destroy();
+        this.resultBuffer = GPUBufferNull;
+
+        this.dispatchCount = anyNull;
+        this.workgroupSize = anyNull;
+        this.container.innerHTML = '';
+
+        this.chunkSumPipeline = GPUComputePipelineNull
+        this.sumBindGroups = anyNull
+        this.imgBitmap?.close();
+        this.imgBitmap = anyNull
+        this.texture?.destroy();
+        this.texture = GPUTextureNull;
+    }
+
     static async getBufferData() {
         if (!this.isInited) return null;
         // Read the results
@@ -218,17 +242,17 @@ export class ComputeHistogram extends Base {
         }
     }
 
-    private static replaceShader(code:string, replaceObj:keyValue[]){
-        replaceObj.forEach((kv:keyValue)=>{
+    private static replaceShader(code: string, replaceObj: keyValue[]) {
+        replaceObj.forEach((kv: keyValue) => {
             code = code.replace(`$${kv.key}$`, `${kv.value}`)
         })
 
         return code;
-        
+
     }
 }
 
 interface keyValue {
-    key:string,
-    value:number
+    key: string,
+    value: number
 }

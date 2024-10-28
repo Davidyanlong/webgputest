@@ -3,21 +3,22 @@ import { anyNull, GPURenderPassDescriptorNull, GPURenderPipelineNull, GPUTexture
 import { GPUContext } from "./gpuContext";
 
 export class Base {
-    public static domName: string = ''
-    public static actived: boolean = true
+    public static domName: string;
+    public static actived: boolean;
     protected static pipeline: GPURenderPipeline | GPUComputePipeline
     protected static device: GPUDevice
     protected static context: GPUCanvasContext
     protected static depthTexture: GPUTexture | null
     protected static renderPassDescriptor: GPURenderPassDescriptor
-    protected static aspect = 1;
+    protected static aspect:number;
     protected static presentationFormat: GPUTextureFormat
     protected static io: IntersectionObserver
     protected static observer: ResizeObserver
     protected static mo: MutationObserver
     protected static gui: any
     protected static settings: Record<string, any>
-    protected static isInited = false
+    protected static isInited:boolean
+    protected static destroyed:boolean
 
     private static ioEvent: (e: any) => void
     public static async initialize(device: GPUDevice) {
@@ -25,6 +26,9 @@ export class Base {
         this.isInited = false;
         this.actived = true;
         this.depthTexture = null;
+        this.aspect = 1;
+        this.destroyed = false;
+        this.domName = '';
     }
     protected static initCanvas(canvasId: string, isOut = false, parentDom: HTMLDivElement | null = null) {
 
@@ -85,7 +89,12 @@ export class Base {
         this.isInited = false;
         this.actived = false;
         this.context?.getCurrentTexture()?.destroy();
+
         this.context = anyNull;
+
+        this.depthTexture?.destroy();
+        this.depthTexture = GPUTextureNull;
+
         // 移除事件
         window.removeEventListener('scroll', this.ioEvent)
         window.removeEventListener('resize', this.ioEvent)

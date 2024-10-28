@@ -17,6 +17,7 @@ export class Blend extends Base {
     private static module: GPUShaderModule
     private static pipelineLayout: GPUPipelineLayout
     static async initialize(device: GPUDevice) {
+        
 
         await super.initialize(device)
         super.initCanvas('blend')
@@ -291,7 +292,7 @@ export class Blend extends Base {
     }
 
     protected static initGUI() {
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
         super.initGUI();
 
         this.settings = {
@@ -379,6 +380,7 @@ export class Blend extends Base {
                 },
             },
         };
+
         this.gui.add(this.settings, 'alphaMode', ['opaque', 'premultiplied']).name('canvas alphaMode');
         this.gui.add(this.settings, 'textureSet', ['premultiplied alpha', 'un-premultiplied alpha']);
         this.gui.add(this.settings, 'preset', Object.keys(presets))

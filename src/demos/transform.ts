@@ -205,7 +205,7 @@ export class Transform extends Base {
     }
 
     protected static initGUI() {
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
         super.initGUI();
 
         this.settings = {

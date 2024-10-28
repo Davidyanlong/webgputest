@@ -1,6 +1,7 @@
 import { initGUI } from "../utils/gui";
 import { anyNull, GPURenderPassDescriptorNull, GPURenderPipelineNull, GPUTextureFormatNull, GPUTextureNull } from "./constant";
 import { GPUContext } from "./gpuContext";
+import GUI  from 'muigui'
 
 export class Base {
     public static domName: string;
@@ -15,7 +16,7 @@ export class Base {
     protected static io: IntersectionObserver
     protected static observer: ResizeObserver
     protected static mo: MutationObserver
-    protected static gui: any
+    protected static gui: GUI
     protected static settings: Record<string, any>
     protected static isInited:boolean
     protected static destroyed:boolean
@@ -212,7 +213,5 @@ export class Base {
     protected static initGUI() {
         this.gui = initGUI((this.context.canvas as HTMLCanvasElement).parentElement as HTMLElement);
     }
-
-
 
 }

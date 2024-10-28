@@ -432,14 +432,13 @@ export class Optimization extends Base {
 
 
     protected static initGUI() {
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
         super.initGUI();
 
         this.settings = {
             numObjects: 1000,
         };
 
-        // @ts-ignore  
         this.gui.add(this.settings, 'numObjects', { min: 0, max: this.maxObjects, step: 1 });
 
     }

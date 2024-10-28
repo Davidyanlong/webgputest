@@ -1,4 +1,5 @@
 
+import GUI from "muigui"
 import { Base } from "../common/base"
 import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/spotLight/spotLight.wgsl?raw'
@@ -273,7 +274,7 @@ export class SpotLight extends Base {
     }
 
     protected static initGUI() {
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
         super.initGUI();
 
         this.settings = {
@@ -289,7 +290,7 @@ export class SpotLight extends Base {
 
         this.gui.add(this.settings, 'rotation', radToDegOptions);
         this.gui.add(this.settings, 'shininess', { min: 1, max: 250 });
-        // @ts-ignore
+
         GUI.makeMinMaxPair(this.gui, this.settings, 'innerLimit', 'outerLimit', limitOptions);
         this.gui.add(this.settings, 'aimOffsetX', -50, 50);
         this.gui.add(this.settings, 'aimOffsetY', -50, 50);

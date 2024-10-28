@@ -229,7 +229,7 @@ export class DirectionalLight extends Base {
     }
 
     protected static initGUI() {
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
 
         super.initGUI();
 

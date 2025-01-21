@@ -175,6 +175,9 @@ export class TextureImageMipmap extends Base {
                 './coins.jpg', { mips: true }),
             await GenerateMips.createTextureFromImage(this.device,
                 './Granite_paving_tileable_512x512.jpeg', { mips: true }),
+            await GenerateMips.createTextureFromImage(this.device,
+                    './test.png', { mips: true }),
+                
         ]);
 
 

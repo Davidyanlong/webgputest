@@ -1,5 +1,18 @@
 export type vec3Type = Float32Array
 export const vec3 = {
+    fromValues(x: number, y: number, z: number) {
+        const dst = new Float32Array(3);
+        if (x !== undefined) {
+            dst[0] = x;
+            if (y !== undefined) {
+                dst[1] = y;
+                if (z !== undefined) {
+                    dst[2] = z;
+                }
+            }
+        }
+        return dst;
+    },
     cross(a: vec3Type, b: vec3Type, dst?: vec3Type) {
         dst = dst || new Float32Array(3);
 

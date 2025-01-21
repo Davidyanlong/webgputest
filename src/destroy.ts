@@ -1,5 +1,4 @@
 import { GPUContext } from './common/gpuContext';
-import { Application } from './application';
 import { demos } from './demos/index'
 
 export class Destroy {

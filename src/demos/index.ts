@@ -37,6 +37,9 @@ import { ComputeVideoHistogram } from "./computeVideo";
 import { PointMarker } from './pointMarker';
 import { BigPoint } from './bigPoint'
 import { Optimization } from './optimization'
+import { ReversedZ } from "./reversedZ";
+
+// TODO: 抽离相关的功能模块
 
 // 保证案例的输出顺序
 export const demos = [
@@ -78,5 +81,6 @@ export const demos = [
     ComputeVideoHistogram,
     PointMarker,
     BigPoint,
-    Optimization
+    Optimization,
+    ReversedZ
 ]

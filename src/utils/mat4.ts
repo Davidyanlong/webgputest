@@ -1,5 +1,6 @@
 import { vec3, vec3Type } from "./vec3";
 
+export type Mat4 = number[] | Float32Array | Float64Array;
 export const mat4 = {
     projection(width: number, height: number, depth: number, dst?: Float32Array) {
         // Note: This matrix flips the Y axis so that 0 is at the top.
@@ -195,6 +196,63 @@ export const mat4 = {
         return mat4.multiply(m, mat4.rotationZ(angleInRadians), dst);
     },
 
+    rotate(m: Float32Array, axis: vec3Type, angleInRadians: number, dst?: Float32Array) {
+        dst = dst || new Float32Array(16);
+        let x = axis[0];
+        let y = axis[1];
+        let z = axis[2];
+        const n = Math.sqrt(x * x + y * y + z * z);
+        x /= n;
+        y /= n;
+        z /= n;
+        const xx = x * x;
+        const yy = y * y;
+        const zz = z * z;
+        const c = Math.cos(angleInRadians);
+        const s = Math.sin(angleInRadians);
+        const oneMinusCosine = 1 - c;
+        const r00 = xx + (1 - xx) * c;
+        const r01 = x * y * oneMinusCosine + z * s;
+        const r02 = x * z * oneMinusCosine - y * s;
+        const r10 = x * y * oneMinusCosine - z * s;
+        const r11 = yy + (1 - yy) * c;
+        const r12 = y * z * oneMinusCosine + x * s;
+        const r20 = x * z * oneMinusCosine + y * s;
+        const r21 = y * z * oneMinusCosine - x * s;
+        const r22 = zz + (1 - zz) * c;
+        const m00 = m[0];
+        const m01 = m[1];
+        const m02 = m[2];
+        const m03 = m[3];
+        const m10 = m[4];
+        const m11 = m[5];
+        const m12 = m[6];
+        const m13 = m[7];
+        const m20 = m[8];
+        const m21 = m[9];
+        const m22 = m[10];
+        const m23 = m[11];
+        dst[0] = r00 * m00 + r01 * m10 + r02 * m20;
+        dst[1] = r00 * m01 + r01 * m11 + r02 * m21;
+        dst[2] = r00 * m02 + r01 * m12 + r02 * m22;
+        dst[3] = r00 * m03 + r01 * m13 + r02 * m23;
+        dst[4] = r10 * m00 + r11 * m10 + r12 * m20;
+        dst[5] = r10 * m01 + r11 * m11 + r12 * m21;
+        dst[6] = r10 * m02 + r11 * m12 + r12 * m22;
+        dst[7] = r10 * m03 + r11 * m13 + r12 * m23;
+        dst[8] = r20 * m00 + r21 * m10 + r22 * m20;
+        dst[9] = r20 * m01 + r21 * m11 + r22 * m21;
+        dst[10] = r20 * m02 + r21 * m12 + r22 * m22;
+        dst[11] = r20 * m03 + r21 * m13 + r22 * m23;
+        if (m !== dst) {
+            dst[12] = m[12];
+            dst[13] = m[13];
+            dst[14] = m[14];
+            dst[15] = m[15];
+        }
+        return dst;
+    },
+
     scale(m: Float32Array, scale: [number, number, number], dst?: Float32Array) {
         return mat4.multiply(m, mat4.scaling(scale), dst);
     },
@@ -330,7 +388,7 @@ export const mat4 = {
 
         return dst;
     },
-     axisRotate(m:Float32Array, axis:vec3Type, angleInRadians:number, dst:Float32Array) {
+    axisRotate(m: Float32Array, axis: vec3Type, angleInRadians: number, dst: Float32Array) {
         const newDst = (dst ?? new Float32Array(16));
         let x = axis[0];
         let y = axis[1];

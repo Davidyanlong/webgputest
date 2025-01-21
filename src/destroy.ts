@@ -1,8 +1,9 @@
 import { GPUContext } from './common/gpuContext';
 import { demos } from './demos/index'
+import GUI from 'muigui';
 
 export class Destroy {
-    private static gui:any
+    private static gui:GUI
     public static async initialize(){
         this.initGUI();
         // 测试列表
@@ -12,7 +13,7 @@ export class Destroy {
     }
     private static initGUI(){
          const parentDom = document.querySelector('#destroydom')!
-         // @ts-ignore
+
          const gui = this.gui = new GUI({
             parent: parentDom,
             // width: '175px',

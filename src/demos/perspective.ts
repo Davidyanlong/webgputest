@@ -1,4 +1,5 @@
 
+import GUI from "muigui"
 import { Base } from "../common/base"
 import { Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/orthogonal/orthogonal.wgsl?raw'
@@ -195,11 +196,11 @@ export class Perspective extends Base {
 
         this.bindGroup = GPUBindGroupNull
         this.uniformValues = Float32ArrayNull;
-        this.matrixValue = Float32ArrayNull;        
+        this.matrixValue = Float32ArrayNull;
     }
 
     protected static initGUI() {
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
         super.initGUI();
 
         this.settings = {
@@ -209,7 +210,7 @@ export class Perspective extends Base {
             rotation: [degToRad(220), degToRad(25), degToRad(325)],
             scale: [1, 1, 1],
         };
-        // @ts-ignore
+        
         this.gui.add(this.settings, 'fieldOfView', { min: 1, max: 179, converters: GUI.converters.radToDeg });
         this.gui.add(this.settings.translation, '0', -1000, 1000).name('translation.x');
         this.gui.add(this.settings.translation, '1', -1000, 1000).name('translation.y');

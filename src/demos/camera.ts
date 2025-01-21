@@ -1,4 +1,5 @@
 
+import GUI from "muigui"
 import { Base } from "../common/base"
 import { anyNull, Float32ArrayNull, GPUBindGroupNull, GPUBufferNull } from "../common/constant"
 import shadercode from '../shaders/orthogonal/orthogonal.wgsl?raw'
@@ -238,7 +239,7 @@ export class Camera extends Base {
         this.vertexBuffer?.destroy()
         this.vertexBuffer = GPUBufferNull
         let objInfo;
-        while(objInfo = this.objectInfos?.pop()){
+        while (objInfo = this.objectInfos?.pop()) {
             objInfo.bindGroup = GPUBindGroupNull
             objInfo.matrixValue = Float32ArrayNull
             objInfo.uniformBuffer?.destroy()
@@ -251,7 +252,7 @@ export class Camera extends Base {
 
     protected static initGUI() {
 
-        if (this.gui) return;
+        if (this.gui?.domElement) return;
 
         super.initGUI();
 
@@ -262,8 +263,7 @@ export class Camera extends Base {
             cameraAngle: 0,
         };
 
-      
-        // @ts-ignore
+
         this.gui.add(this.settings, 'fieldOfView', { min: 1, max: 179, converters: GUI.converters.radToDeg });
         this.gui.add(this.settings, 'cameraAngle', radToDegOptions);
     }
